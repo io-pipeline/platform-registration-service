@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.quarkus)
+    alias(libs.plugins.maven.publish)
+    id 'com.bmuschko.docker-remote-api' version '9.4.0'
 }
 
 
@@ -63,4 +65,87 @@ compileJava {
 
 compileTestJava {
     options.encoding = 'UTF-8'
+}
+
+// Publishing configuration
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            pom {
+                name.set('Platform Registration Service')
+                description.set('Central service registry and discovery for the Pipeline platform')
+                url.set('https://github.com/io-pipeline/platform-registration-service')
+
+                licenses {
+                    license {
+                        name.set('Apache License 2.0')
+                        url.set('https://www.apache.org/licenses/LICENSE-2.0')
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set('krickert')
+                        name.set('Pipeline Engine Team')
+                    }
+                }
+
+                scm {
+                    connection.set('scm:git:git://github.com/io-pipeline/platform-registration-service.git')
+                    developerConnection.set('scm:git:ssh://github.com/io-pipeline/platform-registration-service.git')
+                    url.set('https://github.com/io-pipeline/platform-registration-service')
+                }
+            }
+        }
+    }
+
+    repositories {
+        // Publish to Gitea Maven registry (primary)
+        maven {
+            name = "Gitea"
+            url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
+            credentials {
+                username = project.findProperty("gitea.user") ?: System.getenv("GITEA_USER") ?: "krickert"
+                password = project.findProperty("gitea.token") ?: System.getenv("GITEA_TOKEN")
+            }
+        }
+
+        // Publish to GitHub Packages (mirror)
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/io-pipeline/platform-registration-service")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: System.getenv("GH_USER")
+                password = System.getenv("GITHUB_TOKEN") ?: System.getenv("GH_PAT")
+            }
+        }
+    }
+}
+
+// Docker build configuration
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
+task buildImage(type: DockerBuildImage) {
+    description = 'Builds the Docker image using Quarkus build'
+    group = 'docker'
+
+    dependsOn quarkusBuild
+
+    inputDir = project.layout.projectDirectory.dir('src/main/docker')
+    dockerFile = project.layout.projectDirectory.file('src/main/docker/Dockerfile.jvm')
+
+    images.add("git.rokkon.com/io-pipeline/platform-registration-service:latest")
+    images.add("git.rokkon.com/io-pipeline/platform-registration-service:${project.version}")
+}
+
+task pushImage(type: DockerPushImage) {
+    description = 'Pushes the Docker image to Gitea Container Registry'
+    group = 'docker'
+
+    dependsOn buildImage
+
+    images.add("git.rokkon.com/io-pipeline/platform-registration-service:latest")
+    images.add("git.rokkon.com/io-pipeline/platform-registration-service:${project.version}")
 }

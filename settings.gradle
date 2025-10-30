@@ -1,13 +1,10 @@
 pluginManagement {
     repositories {
-        // Use Maven Local only for our own group to avoid broken/incomplete cached artifacts
-        mavenLocal() {
-            content {
-                includeGroupByRegex "io\\.pipeline(\\..*)?"
-            }
+        // Gradle Plugin Portal (proxied through Nexus)
+        maven {
+            url = uri('https://maven.rokkon.com/repository/gradle-plugins/')
+            allowInsecureProtocol = false
         }
-        // Sonatype public group often sees Quarkus releases first
-        maven { url = uri('https://s01.oss.sonatype.org/content/groups/public/') }
         gradlePluginPortal()
         mavenCentral()
     }
@@ -16,13 +13,38 @@ pluginManagement {
 rootProject.name = 'platform-registration-service'
 
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+
+    versionCatalogs {
+        libs {
+            // Import version catalog from published BOM
+            from("io.pipeline:pipeline-bom-catalog:1.0.0-SNAPSHOT")
+        }
+    }
+
     repositories {
-        // Maven Local for published Pipeline artifacts
+        // Maven Local for published Pipeline artifacts during development
         mavenLocal() {
             content {
                 includeGroupByRegex "io\\.pipeline(\\..*)?"
             }
         }
+
+        // Gitea Maven registry (for BOM catalog and internal artifacts)
+        maven {
+            url = uri('https://git.rokkon.com/api/packages/io-pipeline/maven')
+            allowInsecureProtocol = false
+            content {
+                includeGroupByRegex "io\\.pipeline(\\..*)?"
+            }
+        }
+
+        // Nexus as Maven Central mirror (fast local cache on NAS)
+        maven {
+            url = uri('https://maven.rokkon.com/repository/maven-public/')
+            allowInsecureProtocol = false
+        }
+
         // Sonatype for Quarkus early releases
         maven {
             url = uri('https://s01.oss.sonatype.org/content/groups/public/')
@@ -31,13 +53,8 @@ dependencyResolutionManagement {
                 includeGroup 'io.quarkus.platform'
             }
         }
-        mavenCentral()
-    }
 
-    versionCatalogs {
-        libs {
-            // Import version catalog from this repository
-            from(files("gradle/libs.versions.toml"))
-        }
+        // Fallback to Maven Central
+        mavenCentral()
     }
 }
