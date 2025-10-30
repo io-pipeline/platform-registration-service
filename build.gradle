@@ -2,12 +2,12 @@ plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.quarkus)
     alias(libs.plugins.maven.publish)
-    id 'com.bmuschko.docker-remote-api' version '9.4.0'
 }
 
 
 
 dependencies {
+    implementation 'io.quarkus:quarkus-container-image-docker'
     // Use published BOM from Maven Local
     implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
 
@@ -121,31 +121,4 @@ publishing {
             }
         }
     }
-}
-
-// Docker build configuration
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-
-task buildImage(type: DockerBuildImage) {
-    description = 'Builds the Docker image using Quarkus build'
-    group = 'docker'
-
-    dependsOn quarkusBuild
-
-    inputDir = project.layout.projectDirectory.dir('src/main/docker')
-    dockerFile = project.layout.projectDirectory.file('src/main/docker/Dockerfile.jvm')
-
-    images.add("git.rokkon.com/io-pipeline/platform-registration-service:latest")
-    images.add("git.rokkon.com/io-pipeline/platform-registration-service:${project.version}")
-}
-
-task pushImage(type: DockerPushImage) {
-    description = 'Pushes the Docker image to Gitea Container Registry'
-    group = 'docker'
-
-    dependsOn buildImage
-
-    images.add("git.rokkon.com/io-pipeline/platform-registration-service:latest")
-    images.add("git.rokkon.com/io-pipeline/platform-registration-service:${project.version}")
 }
