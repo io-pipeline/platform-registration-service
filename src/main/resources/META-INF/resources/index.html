@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Registration Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .module-list {
+            margin-top: 20px;
+        }
+        .module-item {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .module-item h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .module-info {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .health-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .health-passing {
+            background-color: #28a745;
+            color: white;
+        }
+        .health-failing {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Module Registration Service</h1>
+        
+        <div class="form-section">
+            <h2>Register Module</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="serviceName">Service Name:</label>
+                    <input type="text" id="serviceName" name="serviceName" value="echo-module" required>
+                </div>
+                <div class="form-group">
+                    <label for="serviceId">Service ID (optional):</label>
+                    <input type="text" id="serviceId" name="serviceId" placeholder="Leave empty for auto-generated">
+                </div>
+                <div class="form-group">
+                    <label for="host">Host:</label>
+                    <input type="text" id="host" name="host" value="localhost" required>
+                </div>
+                <div class="form-group">
+                    <label for="port">Port:</label>
+                    <input type="number" id="port" name="port" value="50051" required>
+                </div>
+                <div class="form-group">
+                    <label for="metadata">Metadata (JSON):</label>
+                    <textarea id="metadata" name="metadata" rows="3">{"version": "1.0.0", "type": "processor"}</textarea>
+                </div>
+                <button type="submit">Register Module</button>
+            </form>
+            <div id="registerResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <div class="form-section">
+            <h2>List Registered Modules</h2>
+            <button onclick="listModules()">Refresh Module List</button>
+            <div id="moduleList" class="module-list"></div>
+        </div>
+
+        <div class="form-section">
+            <h2>Check Module Health</h2>
+            <form id="healthForm">
+                <div class="form-group">
+                    <label for="healthServiceId">Service ID:</label>
+                    <input type="text" id="healthServiceId" name="healthServiceId" required>
+                </div>
+                <button type="submit">Check Health</button>
+            </form>
+            <div id="healthResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <div class="form-section">
+            <h2>Unregister Module</h2>
+            <form id="unregisterForm">
+                <div class="form-group">
+                    <label for="unregisterServiceId">Service ID:</label>
+                    <input type="text" id="unregisterServiceId" name="unregisterServiceId" required>
+                </div>
+                <button type="submit">Unregister Module</button>
+            </form>
+            <div id="unregisterResponse" class="response" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api/registration';
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const responseDiv = document.getElementById('registerResponse');
+            
+            try {
+                const formData = new FormData(e.target);
+                const metadata = JSON.parse(formData.get('metadata') || '{}');
+                
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        serviceName: formData.get('serviceName'),
+                        serviceId: formData.get('serviceId'),
+                        host: formData.get('host'),
+                        port: parseInt(formData.get('port')),
+                        metadata: metadata
+                    })
+                });
+                
+                const result = await response.json();
+                responseDiv.innerHTML = JSON.stringify(result, null, 2);
+                responseDiv.className = result.success ? 'response success' : 'response error';
+                responseDiv.style.display = 'block';
+                
+                // Refresh the module list
+                if (result.success) {
+                    listModules();
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `Error: ${error.message}`;
+                responseDiv.className = 'response error';
+                responseDiv.style.display = 'block';
+            }
+        });
+        
+        document.getElementById('healthForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const responseDiv = document.getElementById('healthResponse');
+            
+            try {
+                const serviceId = document.getElementById('healthServiceId').value;
+                
+                const response = await fetch(`${API_BASE}/health/${serviceId}`);
+                const result = await response.json();
+                
+                responseDiv.innerHTML = JSON.stringify(result, null, 2);
+                responseDiv.className = 'response success';
+                responseDiv.style.display = 'block';
+            } catch (error) {
+                responseDiv.innerHTML = `Error: ${error.message}`;
+                responseDiv.className = 'response error';
+                responseDiv.style.display = 'block';
+            }
+        });
+        
+        document.getElementById('unregisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const responseDiv = document.getElementById('unregisterResponse');
+            
+            try {
+                const serviceId = document.getElementById('unregisterServiceId').value;
+                
+                const response = await fetch(`${API_BASE}/unregister/${serviceId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                responseDiv.innerHTML = JSON.stringify(result, null, 2);
+                responseDiv.className = result.success ? 'response success' : 'response error';
+                responseDiv.style.display = 'block';
+                
+                // Refresh the module list
+                if (result.success) {
+                    listModules();
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `Error: ${error.message}`;
+                responseDiv.className = 'response error';
+                responseDiv.style.display = 'block';
+            }
+        });
+        
+        async function listModules() {
+            const listDiv = document.getElementById('moduleList');
+            
+            try {
+                const response = await fetch(`${API_BASE}/list`);
+                const result = await response.json();
+                
+                if (result.modules && result.modules.length > 0) {
+                    listDiv.innerHTML = result.modules.map(module => `
+                        <div class="module-item">
+                            <h4>${module.serviceName}</h4>
+                            <div class="module-info">
+                                <strong>ID:</strong> ${module.serviceId}<br>
+                                <strong>Endpoint:</strong> ${module.host}:${module.port}<br>
+                                <strong>Metadata:</strong> ${JSON.stringify(module.metadata)}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    listDiv.innerHTML = '<p>No modules registered</p>';
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<div class="response error">Error loading modules: ${error.message}</div>`;
+            }
+        }
+        
+        // Load modules on page load
+        window.addEventListener('load', () => {
+            listModules();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+plugins {
+    alias(libs.plugins.java)
+    alias(libs.plugins.quarkus)
+}
+
+
+
+dependencies {
+    // Use published BOM from Maven Local
+    implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
+
+    // Quarkus dependencies
+    implementation 'io.quarkus:quarkus-grpc'
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-hibernate-reactive-panache'
+    implementation 'io.quarkus:quarkus-hibernate-orm'
+    implementation 'io.quarkus:quarkus-reactive-mysql-client'
+    implementation 'io.quarkus:quarkus-jdbc-mysql'
+    implementation 'io.quarkus:quarkus-flyway'
+    implementation 'org.flywaydb:flyway-mysql'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
+    implementation 'io.quarkus:quarkus-messaging-kafka'
+    implementation libs.apicurio.registry.protobuf.serde
+
+    // Consul integration
+    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
+    implementation 'io.quarkus:quarkus-vertx'
+    implementation 'io.smallrye.stork:stork-service-discovery-consul'
+
+    // Apicurio Registry v3 client
+    implementation libs.apicurio.registry.java.sdk
+    implementation libs.apicurio.registry.common
+
+    // Pipeline libraries (published to Maven Local)
+    implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
+    implementation 'io.pipeline:pipeline-commons:1.0.0-SNAPSHOT'
+    implementation 'io.pipeline:dynamic-grpc:1.0.0-SNAPSHOT'
+
+    // Testing
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.quarkus:quarkus-junit5-mockito'
+    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'io.rest-assured:rest-assured'
+    runtimeOnly libs.quarkus.logging.manager
+}
+
+group 'io.pipeline'
+version '1.0.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+}
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}

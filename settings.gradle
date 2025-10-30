@@ -1,0 +1,43 @@
+pluginManagement {
+    repositories {
+        // Use Maven Local only for our own group to avoid broken/incomplete cached artifacts
+        mavenLocal() {
+            content {
+                includeGroupByRegex "io\\.pipeline(\\..*)?"
+            }
+        }
+        // Sonatype public group often sees Quarkus releases first
+        maven { url = uri('https://s01.oss.sonatype.org/content/groups/public/') }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'platform-registration-service'
+
+dependencyResolutionManagement {
+    repositories {
+        // Maven Local for published Pipeline artifacts
+        mavenLocal() {
+            content {
+                includeGroupByRegex "io\\.pipeline(\\..*)?"
+            }
+        }
+        // Sonatype for Quarkus early releases
+        maven {
+            url = uri('https://s01.oss.sonatype.org/content/groups/public/')
+            content {
+                includeGroupByRegex 'io\\.quarkus(\\..*)?'
+                includeGroup 'io.quarkus.platform'
+            }
+        }
+        mavenCentral()
+    }
+
+    versionCatalogs {
+        libs {
+            // Import version catalog from this repository
+            from(files("gradle/libs.versions.toml"))
+        }
+    }
+}
