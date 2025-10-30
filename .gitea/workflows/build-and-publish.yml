@@ -30,8 +30,8 @@ jobs:
       - name: Publish to Gitea Maven
         if: github.ref == 'refs/heads/main'
         env:
-          GITEA_USER: ${{ secrets.GITEA_USER }}
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          GITEA_USER: ${{ secrets.GIT_USER }}
+          GITEA_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: ./gradlew publishAllPublicationsToGiteaRepository --no-daemon
       
       - name: Publish to GitHub Packages
@@ -60,13 +60,13 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: git.rokkon.com
-          username: ${{ secrets.GITEA_USER }}
-          password: ${{ secrets.GITEA_TOKEN }}
+          username: ${{ secrets.GIT_USER }}
+          password: ${{ secrets.GIT_TOKEN }}
       
       - name: Build and push Docker image with Quarkus
         env:
-          QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ secrets.GITEA_USER }}
-          QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GITEA_TOKEN }}
+          QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ secrets.GIT_USER }}
+          QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GIT_TOKEN }}
         run: |
           ./gradlew build \
             -Dquarkus.container-image.build=true \
