@@ -1,12 +1,11 @@
 pluginManagement {
     repositories {
-        // Gradle Plugin Portal (proxied through Nexus)
+        // Reposilite Gradle Plugin Portal proxy
         maven {
-            url = uri('https://maven.rokkon.com/repository/gradle-plugins/')
-            allowInsecureProtocol = false
+            url = uri('https://maven.rokkon.com/gradle-plugins/')
         }
+        // Fallback to direct plugin portal
         gradlePluginPortal()
-        mavenCentral()
     }
 }
 
@@ -30,7 +29,25 @@ dependencyResolutionManagement {
             }
         }
 
-        // Gitea Maven registry (for BOM catalog and internal artifacts)
+        // Reposilite snapshots for internal artifacts and BOM catalog
+        maven {
+            url = uri('https://maven.rokkon.com/snapshots')
+            allowInsecureProtocol = false
+            content {
+                includeGroupByRegex "io\\.pipeline(\\..*)?"
+            }
+        }
+
+        // Reposilite releases for internal artifacts
+        maven {
+            url = uri('https://maven.rokkon.com/releases')
+            allowInsecureProtocol = false
+            content {
+                includeGroupByRegex "io\\.pipeline(\\..*)?"
+            }
+        }
+
+        // Gitea Maven registry (backup for internal artifacts)
         maven {
             url = uri('https://git.rokkon.com/api/packages/io-pipeline/maven')
             allowInsecureProtocol = false
@@ -39,18 +56,18 @@ dependencyResolutionManagement {
             }
         }
 
-        // Nexus as Maven Central mirror (fast local cache on NAS)
+        // Reposilite as Maven Central proxy (primary)
         maven {
-            url = uri('https://maven.rokkon.com/repository/maven-public/')
+            url = uri('https://maven.rokkon.com/maven-central/')
             allowInsecureProtocol = false
         }
 
-        // Sonatype for Quarkus early releases
+        // Apache snapshots for Tika 4.x pre-release
         maven {
-            url = uri('https://s01.oss.sonatype.org/content/groups/public/')
+            url = uri('https://maven.rokkon.com/apache-snapshots/')
+            allowInsecureProtocol = false
             content {
-                includeGroupByRegex 'io\\.quarkus(\\..*)?'
-                includeGroup 'io.quarkus.platform'
+                includeGroupByRegex "org\\.apache\\.tika(\\..*)?"
             }
         }
 
