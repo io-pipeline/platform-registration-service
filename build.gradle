@@ -12,7 +12,7 @@ dependencies {
     implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
     
     // Dev services infrastructure (shared Docker Compose stack)
-    runtimeOnly 'io.pipeline:devservices-docker-compose:1.0.0-SNAPSHOT'
+    testImplementation 'io.pipeline:devservices-docker-compose:1.0.0-SNAPSHOT'
 
     // Quarkus dependencies
     implementation 'io.quarkus:quarkus-grpc'
@@ -45,6 +45,7 @@ dependencies {
     // Testing
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.quarkus:quarkus-junit5-mockito'
+    testImplementation 'io.quarkus:quarkus-test-vertx'
     testImplementation 'org.testcontainers:mysql'
     testImplementation 'io.rest-assured:rest-assured'
     runtimeOnly libs.quarkus.logging.manager
@@ -104,23 +105,40 @@ publishing {
     }
 
     repositories {
-        // Publish to Gitea Maven registry (primary)
+        // Publish to Maven Local for development
+        mavenLocal()
+
+        // Publish to Reposilite (primary artifact repository)
+        maven {
+            name = "Reposilite"
+            url = uri(version.toString().endsWith('-SNAPSHOT')
+                ? "https://maven.rokkon.com/snapshots"
+                : "https://maven.rokkon.com/releases")
+            credentials {
+                username = project.findProperty("reposilite.user") ?: System.getenv("REPOS_USER") ?: "admin"
+                password = project.findProperty("reposilite.token") ?: System.getenv("REPOS_PAT")
+            }
+        }
+
+        // Publish to Gitea Maven registry (backup)
         maven {
             name = "Gitea"
             url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
             credentials {
-                username = project.findProperty("gitea.user") ?: System.getenv("GITEA_USER") ?: "krickert"
-                password = project.findProperty("gitea.token") ?: System.getenv("GITEA_TOKEN")
+                username = project.findProperty("gitea.user") ?: System.getenv("GIT_USER") ?: "krickert"
+                password = project.findProperty("gitea.token") ?: System.getenv("GIT_TOKEN")
             }
         }
 
-        // Publish to GitHub Packages (mirror)
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/io-pipeline/platform-registration-service")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR") ?: System.getenv("GH_USER")
-                password = System.getenv("GITHUB_TOKEN") ?: System.getenv("GH_PAT")
+        // Publish to GitHub Packages (mirror) - only if credentials are configured
+        if (System.getenv("GITHUB_ACTOR") != null || System.getenv("GH_USER") != null) {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/io-pipeline/platform-registration-service")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR") ?: System.getenv("GH_USER")
+                    password = System.getenv("GITHUB_TOKEN") ?: System.getenv("GH_PAT")
+                }
             }
         }
     }
