@@ -129,17 +129,5 @@ publishing {
                 password = project.findProperty("gitea.token") ?: System.getenv("GIT_TOKEN")
             }
         }
-
-        // Publish to GitHub Packages (mirror) - only if credentials are configured
-        if (System.getenv("GITHUB_ACTOR") != null || System.getenv("GH_USER") != null) {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/io-pipeline/platform-registration-service")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR") ?: System.getenv("GH_USER")
-                    password = System.getenv("GITHUB_TOKEN") ?: System.getenv("GH_PAT")
-                }
-            }
-        }
     }
 }
