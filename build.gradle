@@ -10,9 +10,6 @@ dependencies {
     implementation 'io.quarkus:quarkus-container-image-docker'
     // Use published BOM from Maven Local
     implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
-    
-    // Dev services infrastructure (shared Docker Compose stack)
-    testImplementation 'io.pipeline:devservices-docker-compose:1.0.0-SNAPSHOT'
 
     // Quarkus dependencies
     implementation 'io.quarkus:quarkus-grpc'
@@ -36,6 +33,9 @@ dependencies {
     // Apicurio Registry v3 client
     implementation libs.apicurio.registry.java.sdk
     implementation libs.apicurio.registry.common
+
+    // Pipeline Dev Services extension (automatic compose infrastructure setup)
+    implementation 'io.pipeline:quarkus-pipeline-devservices:1.0.0-SNAPSHOT'
 
     // Pipeline libraries (published to Maven Local)
     implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
