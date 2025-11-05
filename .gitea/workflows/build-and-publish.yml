@@ -50,7 +50,7 @@ jobs:
         env:
           REPOS_PAT: ${{ secrets.REPOS_PAT }}
           GIT_USER: ${{ secrets.GIT_USER }}
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
         run: ./gradlew publish --no-daemon
 
   docker:
@@ -89,12 +89,12 @@ jobs:
         with:
           registry: git.rokkon.com
           username: ${{ secrets.GIT_USER }}
-          password: ${{ secrets.GIT_TOKEN }}
+          password: ${{ secrets.GIT_PAT }}
 
       - name: Build and push Docker image with Quarkus
         env:
           QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ secrets.GIT_USER }}
-          QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GIT_TOKEN }}
+          QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GIT_PAT }}
           REPOS_PAT: ${{ secrets.REPOS_PAT }}
         run: |
           ./gradlew build \
