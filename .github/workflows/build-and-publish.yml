@@ -30,6 +30,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Override Gradle wrapper distributionUrl
+        run: |
+          sed -i 's|distributionUrl=https\\://maven.rokkon.com/gradle-distributions/|distributionUrl=https\\://services.gradle.org/distributions/|g' gradle/wrapper/gradle-wrapper.properties
+          echo "Updated gradle-wrapper.properties:"
+          cat gradle/wrapper/gradle-wrapper.properties | grep distributionUrl
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -71,6 +77,12 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Override Gradle wrapper distributionUrl
+        run: |
+          sed -i 's|distributionUrl=https\\://maven.rokkon.com/gradle-distributions/|distributionUrl=https\\://services.gradle.org/distributions/|g' gradle/wrapper/gradle-wrapper.properties
+          echo "Updated gradle-wrapper.properties:"
+          cat gradle/wrapper/gradle-wrapper.properties | grep distributionUrl
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
