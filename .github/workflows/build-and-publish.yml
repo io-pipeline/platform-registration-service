@@ -40,6 +40,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and test with Gradle
+        env:
+          CI_PLATFORM: github
         run: ./gradlew clean build test --no-daemon
 
       - name: Upload test results
@@ -99,6 +101,7 @@ jobs:
 
       - name: Build and push Docker image with Quarkus
         env:
+          CI_PLATFORM: github
           QUARKUS_CONTAINER_IMAGE_REGISTRY: ghcr.io
           QUARKUS_CONTAINER_IMAGE_GROUP: io-pipeline
           QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ github.actor }}

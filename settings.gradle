@@ -1,10 +1,12 @@
 pluginManagement {
     repositories {
-        // Reposilite Gradle Plugin Portal proxy
-        maven {
-            url = uri('https://maven.rokkon.com/gradle-plugins/')
+        // Use private Reposilite for local/Gitea builds (fast), skip for GitHub CI
+        if (System.getenv('CI_PLATFORM') != 'github') {
+            maven {
+                url = uri('https://maven.rokkon.com/gradle-plugins/')
+            }
         }
-        // Fallback to direct plugin portal
+        // Fallback to direct plugin portal (always available)
         gradlePluginPortal()
     }
 }
@@ -16,8 +18,11 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         libs {
-            // Import version catalog from published BOM
-            from("io.pipeline:pipeline-bom-catalog:1.0.0-SNAPSHOT")
+            // Import version catalog from published BOM (only available on private network)
+            // GitHub CI builds without BOM - all dependencies must be explicitly versioned in build.gradle
+            if (System.getenv('CI_PLATFORM') != 'github') {
+                from("io.pipeline:pipeline-bom-catalog:1.0.0-SNAPSHOT")
+            }
         }
     }
 
@@ -29,49 +34,63 @@ dependencyResolutionManagement {
             }
         }
 
-        // Reposilite snapshots for internal artifacts and BOM catalog
-        maven {
-            url = uri('https://maven.rokkon.com/snapshots')
-            allowInsecureProtocol = false
-            content {
-                includeGroupByRegex "io\\.pipeline(\\..*)?"
+        // Use private Reposilite for local/Gitea builds (fast), skip for GitHub CI
+        if (System.getenv('CI_PLATFORM') != 'github') {
+            // Reposilite snapshots for internal artifacts and BOM catalog
+            maven {
+                url = uri('https://maven.rokkon.com/snapshots')
+                allowInsecureProtocol = false
+                content {
+                    includeGroupByRegex "io\\.pipeline(\\..*)?"
+                }
+            }
+
+            // Reposilite releases for internal artifacts
+            maven {
+                url = uri('https://maven.rokkon.com/releases')
+                allowInsecureProtocol = false
+                content {
+                    includeGroupByRegex "io\\.pipeline(\\..*)?"
+                }
+            }
+
+            // Gitea Maven registry (backup for internal artifacts)
+            maven {
+                url = uri('https://git.rokkon.com/api/packages/io-pipeline/maven')
+                allowInsecureProtocol = false
+                content {
+                    includeGroupByRegex "io\\.pipeline(\\..*)?"
+                }
+            }
+
+            // Reposilite as Maven Central proxy (primary - faster on local network)
+            maven {
+                url = uri('https://maven.rokkon.com/maven-central/')
+                allowInsecureProtocol = false
+            }
+
+            // Apache snapshots for Tika 4.x pre-release
+            maven {
+                url = uri('https://maven.rokkon.com/apache-snapshots/')
+                allowInsecureProtocol = false
+                content {
+                    includeGroupByRegex "org\\.apache\\.tika(\\..*)?"
+                }
             }
         }
 
-        // Reposilite releases for internal artifacts
-        maven {
-            url = uri('https://maven.rokkon.com/releases')
-            allowInsecureProtocol = false
-            content {
-                includeGroupByRegex "io\\.pipeline(\\..*)?"
-            }
-        }
-
-        // Gitea Maven registry (backup for internal artifacts)
-        maven {
-            url = uri('https://git.rokkon.com/api/packages/io-pipeline/maven')
-            allowInsecureProtocol = false
-            content {
-                includeGroupByRegex "io\\.pipeline(\\..*)?"
-            }
-        }
-
-        // Reposilite as Maven Central proxy (primary)
-        maven {
-            url = uri('https://maven.rokkon.com/maven-central/')
-            allowInsecureProtocol = false
-        }
-
-        // Apache snapshots for Tika 4.x pre-release
-        maven {
-            url = uri('https://maven.rokkon.com/apache-snapshots/')
-            allowInsecureProtocol = false
-            content {
-                includeGroupByRegex "org\\.apache\\.tika(\\..*)?"
-            }
-        }
-
-        // Fallback to Maven Central
+        // Fallback to Maven Central (always available, used by GitHub CI)
         mavenCentral()
+
+        // Apache snapshots for Tika 4.x pre-release (public fallback for GitHub)
+        if (System.getenv('CI_PLATFORM') == 'github') {
+            maven {
+                url = uri('https://repository.apache.org/content/repositories/snapshots/')
+                allowInsecureProtocol = false
+                content {
+                    includeGroupByRegex "org\\.apache\\.tika(\\..*)?"
+                }
+            }
+        }
     }
 }
