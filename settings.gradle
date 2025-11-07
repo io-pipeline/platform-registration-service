@@ -18,11 +18,9 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         libs {
-            // Import version catalog from published BOM (only available on private network)
-            // GitHub CI builds without BOM - all dependencies must be explicitly versioned in build.gradle
-            if (System.getenv('CI_PLATFORM') != 'github') {
-                from("io.pipeline:pipeline-bom-catalog:1.0.0-SNAPSHOT")
-            }
+            // Import version catalog from published BOM
+            // Available on both private Reposilite and public GitHub Packages
+            from("io.pipeline:pipeline-bom-catalog:1.0.0-SNAPSHOT")
         }
     }
 
@@ -75,6 +73,20 @@ dependencyResolutionManagement {
                 allowInsecureProtocol = false
                 content {
                     includeGroupByRegex "org\\.apache\\.tika(\\..*)?"
+                }
+            }
+        }
+
+        // GitHub Packages for io.pipeline artifacts (used by GitHub CI)
+        if (System.getenv('CI_PLATFORM') == 'github') {
+            maven {
+                url = uri('https://maven.pkg.github.com/io-pipeline/bom')
+                credentials {
+                    username = System.getenv('GITHUB_ACTOR') ?: 'readonly'
+                    password = System.getenv('GITHUB_TOKEN') ?: ''
+                }
+                content {
+                    includeGroupByRegex "io\\.pipeline(\\..*)?"
                 }
             }
         }
