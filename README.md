@@ -150,23 +150,23 @@ When `CI_PLATFORM=github` is set:
 
 ### Authentication for GitHub Packages
 
-The BOM is published to GitHub Packages. For authentication:
+The BOM is published to GitHub Packages, which **requires authentication** even for public packages.
 
-**Option 1: No Authentication (Anonymous Read)**
-```bash
-# GitHub Packages allows unauthenticated reads for public packages
-export CI_PLATFORM=github
-./gradlew build
-```
+**Create a GitHub Personal Access Token:**
+1. Go to https://github.com/settings/tokens
+2. Click "Generate new token (classic)"
+3. Select scope: `read:packages`
+4. Generate and copy the token
 
-**Option 2: With GitHub Token (Recommended)**
+**Build with Authentication:**
 ```bash
-# Create a GitHub personal access token with read:packages scope
+# Set environment variables
 export CI_PLATFORM=github
 export GITHUB_ACTOR=your-github-username
 export GITHUB_TOKEN=your-github-personal-access-token
 
-./gradlew build
+# Build the project
+./gradlew clean build -x test
 ```
 
 ### Troubleshooting Public Builds
@@ -178,10 +178,13 @@ export GITHUB_TOKEN=your-github-personal-access-token
 # distributionUrl=https\://services.gradle.org/distributions/gradle-9.2.0-all.zip
 ```
 
-**Issue: Cannot resolve io.pipeline:pipeline-bom-catalog**
+**Issue: 401 Unauthorized accessing GitHub Packages**
 ```bash
-# Solution: Set CI_PLATFORM=github to use GitHub Packages
+# Solution: GitHub Packages requires authentication even for public packages
+# Create a personal access token and set environment variables:
 export CI_PLATFORM=github
+export GITHUB_ACTOR=your-github-username
+export GITHUB_TOKEN=your-github-personal-access-token
 ./gradlew clean build --refresh-dependencies
 ```
 
