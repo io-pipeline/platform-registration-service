@@ -41,7 +41,6 @@ jobs:
 
       - name: Build and test with Gradle
         env:
-          CI_PLATFORM: github
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean build test --no-daemon
@@ -103,7 +102,6 @@ jobs:
 
       - name: Build and push Docker image with Quarkus
         env:
-          CI_PLATFORM: github
           QUARKUS_CONTAINER_IMAGE_REGISTRY: ghcr.io
           QUARKUS_CONTAINER_IMAGE_GROUP: io-pipeline
           QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ github.actor }}

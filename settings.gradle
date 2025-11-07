@@ -1,12 +1,12 @@
 pluginManagement {
     repositories {
-        // Use private Reposilite for local/Gitea builds (fast), skip for GitHub CI
-        if (System.getenv('CI_PLATFORM') != 'github') {
+        // Use private Reposilite only when explicitly set for internal network builds
+        if (System.getenv('CI_ENV') == 'internal') {
             maven {
                 url = uri('https://maven.rokkon.com/gradle-plugins/')
             }
         }
-        // Fallback to direct plugin portal (always available)
+        // Default to public Gradle Plugin Portal (always available)
         gradlePluginPortal()
     }
 }
@@ -32,8 +32,8 @@ dependencyResolutionManagement {
             }
         }
 
-        // Use private Reposilite for local/Gitea builds (fast), skip for GitHub CI
-        if (System.getenv('CI_PLATFORM') != 'github') {
+        // Use private Reposilite ONLY when CI_ENV=internal (internal network builds)
+        if (System.getenv('CI_ENV') == 'internal') {
             // Reposilite snapshots for internal artifacts and BOM catalog
             maven {
                 url = uri('https://maven.rokkon.com/snapshots')
@@ -77,8 +77,8 @@ dependencyResolutionManagement {
             }
         }
 
-        // GitHub Packages for io.pipeline artifacts (used by GitHub CI)
-        if (System.getenv('CI_PLATFORM') == 'github') {
+        // GitHub Packages for io.pipeline artifacts (default for public builds)
+        if (System.getenv('CI_ENV') != 'internal') {
             maven {
                 url = uri('https://maven.pkg.github.com/io-pipeline/bom')
                 credentials {
@@ -91,11 +91,11 @@ dependencyResolutionManagement {
             }
         }
 
-        // Fallback to Maven Central (always available, used by GitHub CI)
+        // Maven Central (always available, default for public builds)
         mavenCentral()
 
-        // Apache snapshots for Tika 4.x pre-release (public fallback for GitHub)
-        if (System.getenv('CI_PLATFORM') == 'github') {
+        // Apache snapshots for Tika 4.x pre-release (default for public builds)
+        if (System.getenv('CI_ENV') != 'internal') {
             maven {
                 url = uri('https://repository.apache.org/content/repositories/snapshots/')
                 allowInsecureProtocol = false

@@ -35,6 +35,7 @@ jobs:
 
       - name: Build and test with Gradle
         env:
+          CI_ENV: internal
           REPOS_PAT: ${{ secrets.REPOS_PAT }}
         run: ./gradlew clean build test --no-daemon
 
@@ -48,6 +49,7 @@ jobs:
       - name: Publish to Reposilite and Gitea
         if: gitea.ref == 'refs/heads/main'
         env:
+          CI_ENV: internal
           REPOS_PAT: ${{ secrets.REPOS_PAT }}
           GIT_USER: ${{ secrets.GIT_USER }}
           GIT_PAT: ${{ secrets.GIT_PAT }}
@@ -93,6 +95,7 @@ jobs:
 
       - name: Build and push Docker image with Quarkus
         env:
+          CI_ENV: internal
           QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ secrets.GIT_USER }}
           QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GIT_PAT }}
           REPOS_PAT: ${{ secrets.REPOS_PAT }}
