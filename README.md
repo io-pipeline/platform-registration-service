@@ -106,6 +106,126 @@ CREATE TABLE config_schemas (
 );
 ```
 
+## Building from Public Internet
+
+If you've downloaded this project and only have access to the public internet (no access to private maven.rokkon.com repositories), follow these instructions:
+
+### Prerequisites
+- Java 21+ (OpenJDK or Oracle)
+- Docker installed and running
+- Internet connection to Maven Central and GitHub Packages
+
+### Quick Start
+
+```bash
+# 1. Set environment variable to use public repositories
+export CI_PLATFORM=github
+
+# 2. Clone the repository (if not already done)
+git clone https://github.com/io-pipeline/platform-registration-service.git
+cd platform-registration-service
+
+# 3. Build the application
+./gradlew clean build -x test
+
+# 4. Build Docker image
+docker build -f src/main/docker/Dockerfile.jvm -t platform-registration-service:latest .
+
+# 5. Run the container
+docker run -p 38101:8080 platform-registration-service:latest
+```
+
+### How It Works
+
+The build system automatically detects the `CI_PLATFORM` environment variable:
+
+- **Without CI_PLATFORM** (default): Uses fast internal maven.rokkon.com repositories
+- **With CI_PLATFORM=github**: Uses public Maven Central and GitHub Packages
+
+When `CI_PLATFORM=github` is set:
+- Gradle wrapper downloads from `services.gradle.org` (public)
+- Dependencies resolve from Maven Central (public)
+- BOM (Bill of Materials) resolves from GitHub Packages (public)
+- Apache Tika snapshots from Apache's public repository
+
+### Authentication for GitHub Packages
+
+The BOM is published to GitHub Packages. For authentication:
+
+**Option 1: No Authentication (Anonymous Read)**
+```bash
+# GitHub Packages allows unauthenticated reads for public packages
+export CI_PLATFORM=github
+./gradlew build
+```
+
+**Option 2: With GitHub Token (Recommended)**
+```bash
+# Create a GitHub personal access token with read:packages scope
+export CI_PLATFORM=github
+export GITHUB_ACTOR=your-github-username
+export GITHUB_TOKEN=your-github-personal-access-token
+
+./gradlew build
+```
+
+### Troubleshooting Public Builds
+
+**Issue: Gradle wrapper fails to download**
+```bash
+# Solution: Already configured to use services.gradle.org when CI_PLATFORM=github
+# If issues persist, manually update gradle/wrapper/gradle-wrapper.properties:
+# distributionUrl=https\://services.gradle.org/distributions/gradle-9.2.0-all.zip
+```
+
+**Issue: Cannot resolve io.pipeline:pipeline-bom-catalog**
+```bash
+# Solution: Set CI_PLATFORM=github to use GitHub Packages
+export CI_PLATFORM=github
+./gradlew clean build --refresh-dependencies
+```
+
+**Issue: Connection timeout to maven.rokkon.com**
+```bash
+# Solution: Ensure CI_PLATFORM=github is set BEFORE running gradle
+export CI_PLATFORM=github
+./gradlew clean build
+```
+
+**Issue: Build works but tests fail**
+```bash
+# Solution: Skip tests for initial build, they require infrastructure services
+export CI_PLATFORM=github
+./gradlew clean build -x test
+
+# Or run tests with Testcontainers (requires Docker)
+export CI_PLATFORM=github
+./gradlew clean build  # Tests will use Testcontainers for MySQL
+```
+
+### Understanding the Build Configuration
+
+The `settings.gradle` file contains conditional repository configuration:
+
+```gradle
+// Uses maven.rokkon.com ONLY when CI_PLATFORM != 'github'
+if (System.getenv('CI_PLATFORM') != 'github') {
+    maven { url = uri('https://maven.rokkon.com/...') }
+}
+
+// Always available fallback
+mavenCentral()
+
+// GitHub Packages for BOM (when CI_PLATFORM == 'github')
+if (System.getenv('CI_PLATFORM') == 'github') {
+    maven { url = uri('https://maven.pkg.github.com/io-pipeline/bom') }
+}
+```
+
+This ensures the build works in both environments:
+- **Internal network**: Fast builds using local mirrors
+- **Public internet**: Standard builds using public repositories
+
 ## Docker Build Process
 
 ### Prerequisites
