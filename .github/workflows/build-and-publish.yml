@@ -129,24 +129,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build application artifact
-        run: ./gradlew clean quarkusBuild -x test --no-daemon
-
-      - name: Build and push Docker image
-        env:
-          IMAGE_REGISTRY: ghcr.io
-          IMAGE_REPOSITORY: io-pipeline/platform-registration-service
-          IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
-          IMAGE_SHA_TAG: ${{ github.sha }}
+      - name: Build and push Docker image with Quarkus
         run: |
-          IMAGE="${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
-
-          docker build \
-            -f src/main/docker/Dockerfile.jvm \
-            -t "${IMAGE}:${IMAGE_TAG}" \
-            .
-
-          docker tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:${IMAGE_SHA_TAG}"
-
-          docker push "${IMAGE}:${IMAGE_TAG}"
-          docker push "${IMAGE}:${IMAGE_SHA_TAG}"
+          ./gradlew clean build -x test \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true \
+            -Dquarkus.container-image.registry=ghcr.io \
+            -Dquarkus.container-image.group=${{ github.repository_owner }} \
+            -Dquarkus.container-image.name=platform-registration-service \
+            -Dquarkus.container-image.tag=${{ github.ref_name }}-${{ github.sha }} \
+            -Dquarkus.container-image.additional-tags=${{ github.sha }} \
+            --no-daemon
