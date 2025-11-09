@@ -9,7 +9,7 @@ plugins {
 dependencies {
     implementation 'io.quarkus:quarkus-container-image-docker'
     // Use published BOM from Maven Local
-    implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
+    implementation platform('ai.pipestream:pipeline-bom:0.1.0-SNAPSHOT')
 
     // Quarkus dependencies
     implementation 'io.quarkus:quarkus-grpc'
@@ -35,12 +35,12 @@ dependencies {
     implementation libs.apicurio.registry.common
 
     // Pipeline Dev Services extension (automatic compose infrastructure setup)
-    implementation 'io.pipeline:quarkus-pipeline-devservices:1.0.0-SNAPSHOT'
+    implementation 'ai.pipestream:devservices:0.1.0-SNAPSHOT'
 
     // Pipeline libraries (published to Maven Local)
-    implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
-    implementation 'io.pipeline:pipeline-commons:1.0.0-SNAPSHOT'
-    implementation 'io.pipeline:dynamic-grpc:1.0.0-SNAPSHOT'
+    implementation 'ai.pipestream:grpc-stubs:0.1.0-SNAPSHOT'
+    implementation 'ai.pipestream:pipeline-commons:0.1.0-SNAPSHOT'
+    implementation 'ai.pipestream:dynamic-grpc:0.1.0-SNAPSHOT'
 
     // Testing
     testImplementation 'io.quarkus:quarkus-junit5'
@@ -51,8 +51,8 @@ dependencies {
     runtimeOnly libs.quarkus.logging.manager
 }
 
-group 'io.pipeline'
-version '1.0.0-SNAPSHOT'
+group 'ai.pipestream'
+version '0.1.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -79,7 +79,7 @@ publishing {
             pom {
                 name.set('Platform Registration Service')
                 description.set('Central service registry and discovery for the Pipeline platform')
-                url.set('https://github.com/io-pipeline/platform-registration-service')
+                url.set('https://github.com/ai-pipestream/platform-registration-service')
 
                 licenses {
                     license {
@@ -96,9 +96,9 @@ publishing {
                 }
 
                 scm {
-                    connection.set('scm:git:git://github.com/io-pipeline/platform-registration-service.git')
-                    developerConnection.set('scm:git:ssh://github.com/io-pipeline/platform-registration-service.git')
-                    url.set('https://github.com/io-pipeline/platform-registration-service')
+                    connection.set('scm:git:git://github.com/ai-pipestream/platform-registration-service.git')
+                    developerConnection.set('scm:git:ssh://github.com/ai-pipestream/platform-registration-service.git')
+                    url.set('https://github.com/ai-pipestream/platform-registration-service')
                 }
             }
         }
@@ -108,26 +108,5 @@ publishing {
         // Publish to Maven Local for development
         mavenLocal()
 
-        // Publish to Reposilite (primary artifact repository)
-        maven {
-            name = "Reposilite"
-            url = uri(version.toString().endsWith('-SNAPSHOT')
-                ? "https://maven.rokkon.com/snapshots"
-                : "https://maven.rokkon.com/releases")
-            credentials {
-                username = project.findProperty("reposilite.user") ?: System.getenv("REPOS_USER") ?: "admin"
-                password = project.findProperty("reposilite.token") ?: System.getenv("REPOS_PAT")
-            }
-        }
-
-        // Publish to Gitea Maven registry (backup)
-        maven {
-            name = "Gitea"
-            url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
-            credentials {
-                username = project.findProperty("gitea.user") ?: System.getenv("GIT_USER") ?: "krickert"
-                password = project.findProperty("gitea.token") ?: System.getenv("GIT_PAT")
-            }
-        }
     }
 }
