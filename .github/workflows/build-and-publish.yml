@@ -86,34 +86,18 @@ jobs:
 
       - name: Configure GPG (if available)
         env:
-          # accept either secret name if present
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY || secrets.GPG_PRIVATE_KEY }}
-          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE || secrets.GPG_PASSPHRASE }}
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        if: env.GPG_SIGNING_KEY != ''
         run: |
-          if [ -z "$GPG_SIGNING_KEY" ]; then
-            echo "GPG_SIGNING_KEY not set, skipping import"
-            exit 0
-          fi
-
-          # Quick sanity check: ensure the value looks like an ASCII-armored PRIVATE key
-          if echo "$GPG_SIGNING_KEY" | grep -q '-----BEGIN PGP .*PRIVATE'; then
-            echo "GPG key looks like an ASCII-armored private key; importing..."
-            echo "$GPG_SIGNING_KEY" | gpg --batch --import
-            echo "Imported GPG keys:" && gpg --list-secret-keys --keyid-format LONG || true
-          else
-            echo "GPG_SIGNING_KEY does not look like an ASCII-armored PRIVATE key."
-            echo "If you have a public key or an incorrect value stored in the secret, replace it with the private key in ASCII armor (-----BEGIN PGP PRIVATE KEY BLOCK----- ...)."
-            echo "Skipping import to avoid creating an invalid state."
-          fi
+          echo "$GPG_SIGNING_KEY" | gpg --batch --import
 
       - name: Publish snapshots to Central
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          # make publish step also accept either secret name
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY || secrets.GPG_PRIVATE_KEY }}
-          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE || secrets.GPG_PASSPHRASE }}
-        run: ./gradlew publishAggregationToCentralPortalSnapshots --no-daemon --stacktrace
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+        run: ./gradlew publishAllPublicationsToCentralPortalSnapshots --no-daemon --stacktrace
 
   docker:
     runs-on: ubuntu-latest
