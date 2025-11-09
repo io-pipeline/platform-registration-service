@@ -1,12 +1,5 @@
 pluginManagement {
     repositories {
-        // Use private Reposilite only when explicitly set for internal network builds
-        if (System.getenv('CI_ENV') == 'internal') {
-            maven {
-                url = uri('https://maven.rokkon.com/gradle-plugins/')
-            }
-        }
-        // Default to public Gradle Plugin Portal (always available)
         gradlePluginPortal()
     }
 }

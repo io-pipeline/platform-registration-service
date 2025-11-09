@@ -41,7 +41,7 @@ docker run -d \
   -e MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_APICURIO_REGISTRY_URL="http://pipeline-apicurio-registry:8080/apis/registry/v3" \
   -e QUARKUS_LOG_LEVEL="INFO" \
   -e QUARKUS_LOG_CATEGORY_IO_PIPELINE_LEVEL="DEBUG" \
-  git.rokkon.com/io-pipeline/platform-registration-service:latest
+  ghcr.io/ai-pipestream/platform-registration-service:latest
 ```
 
 ### Option 2: Using docker-compose

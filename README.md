@@ -106,128 +106,56 @@ CREATE TABLE config_schemas (
 );
 ```
 
-## Building from Public Internet
-
-If you've downloaded this project and only have access to the public internet (no access to private maven.rokkon.com repositories), follow these instructions:
+## Building Locally
 
 ### Prerequisites
-- Java 21+ (OpenJDK or Oracle)
-- Docker installed and running
-- Internet connection to Maven Central and GitHub Packages
+- Java 21 (Temurin, Oracle, or any compatible distribution)
+- Docker (optional but required to run the container locally)
+- Internet access to Maven Central and GitHub Packages
+- GitHub Personal Access Token with `read:packages` (GitHub Packages requires auth even for public artifacts)
 
-### Quick Start
-
+### Clone & Build
 ```bash
-# 1. Set environment variable to use public repositories
-export CI_PLATFORM=github
-
-# 2. Clone the repository (if not already done)
 git clone https://github.com/io-pipeline/platform-registration-service.git
 cd platform-registration-service
 
-# 3. Build the application
-./gradlew clean build -x test
-
-# 4. Build Docker image
-docker build -f src/main/docker/Dockerfile.jvm -t platform-registration-service:latest .
-
-# 5. Run the container
-docker run -p 38101:8080 platform-registration-service:latest
-```
-
-### How It Works
-
-The build system automatically detects the `CI_PLATFORM` environment variable:
-
-- **Without CI_PLATFORM** (default): Uses fast internal maven.rokkon.com repositories
-- **With CI_PLATFORM=github**: Uses public Maven Central and GitHub Packages
-
-When `CI_PLATFORM=github` is set:
-- Gradle wrapper downloads from `services.gradle.org` (public)
-- Dependencies resolve from Maven Central (public)
-- BOM (Bill of Materials) resolves from GitHub Packages (public)
-- Apache Tika snapshots from Apache's public repository
-
-### Authentication for GitHub Packages
-
-The BOM is published to GitHub Packages, which **requires authentication** even for public packages.
-
-**Create a GitHub Personal Access Token:**
-1. Go to https://github.com/settings/tokens
-2. Click "Generate new token (classic)"
-3. Select scope: `read:packages`
-4. Generate and copy the token
-
-**Build with Authentication:**
-```bash
-# Set environment variables
-export CI_PLATFORM=github
+# Configure GitHub Packages credentials
 export GITHUB_ACTOR=your-github-username
-export GITHUB_TOKEN=your-github-personal-access-token
+export GITHUB_TOKEN=your-personal-access-token
 
-# Build the project
+# Build the application (skip tests for a faster first run)
 ./gradlew clean build -x test
 ```
 
-### Troubleshooting Public Builds
+> **Tip:** Remove `-x test` once you have the required infrastructure (MySQL, Kafka, Consul) running locally or via Testcontainers.
 
-**Issue: Gradle wrapper fails to download**
+### Build & Run the Docker Image
+You can let Quarkus build the image or build it manually with Docker.
+
+**Quarkus-managed build**
 ```bash
-# Solution: Already configured to use services.gradle.org when CI_PLATFORM=github
-# If issues persist, manually update gradle/wrapper/gradle-wrapper.properties:
-# distributionUrl=https\://services.gradle.org/distributions/gradle-9.2.0-all.zip
+./gradlew clean build -x test \
+  -Dquarkus.container-image.build=true \
+  -Dquarkus.container-image.push=false \
+  -Dquarkus.container-image.registry=ghcr.io \
+  -Dquarkus.container-image.group=ai-pipestream \
+  -Dquarkus.container-image.name=platform-registration-service \
+  -Dquarkus.container-image.tag=local
+
+docker run -p 38101:8080 ghcr.io/ai-pipestream/platform-registration-service:local
 ```
 
-**Issue: 401 Unauthorized accessing GitHub Packages**
+**Manual docker build**
 ```bash
-# Solution: GitHub Packages requires authentication even for public packages
-# Create a personal access token and set environment variables:
-export CI_PLATFORM=github
-export GITHUB_ACTOR=your-github-username
-export GITHUB_TOKEN=your-github-personal-access-token
-./gradlew clean build --refresh-dependencies
+./gradlew clean quarkusBuild -x test
+docker build -f src/main/docker/Dockerfile.jvm -t platform-registration-service:local .
+docker run -p 38101:8080 platform-registration-service:local
 ```
 
-**Issue: Connection timeout to maven.rokkon.com**
-```bash
-# Solution: Ensure CI_PLATFORM=github is set BEFORE running gradle
-export CI_PLATFORM=github
-./gradlew clean build
-```
-
-**Issue: Build works but tests fail**
-```bash
-# Solution: Skip tests for initial build, they require infrastructure services
-export CI_PLATFORM=github
-./gradlew clean build -x test
-
-# Or run tests with Testcontainers (requires Docker)
-export CI_PLATFORM=github
-./gradlew clean build  # Tests will use Testcontainers for MySQL
-```
-
-### Understanding the Build Configuration
-
-The `settings.gradle` file contains conditional repository configuration:
-
-```gradle
-// Uses maven.rokkon.com ONLY when CI_PLATFORM != 'github'
-if (System.getenv('CI_PLATFORM') != 'github') {
-    maven { url = uri('https://maven.rokkon.com/...') }
-}
-
-// Always available fallback
-mavenCentral()
-
-// GitHub Packages for BOM (when CI_PLATFORM == 'github')
-if (System.getenv('CI_PLATFORM') == 'github') {
-    maven { url = uri('https://maven.pkg.github.com/io-pipeline/bom') }
-}
-```
-
-This ensures the build works in both environments:
-- **Internal network**: Fast builds using local mirrors
-- **Public internet**: Standard builds using public repositories
+### Troubleshooting
+- **401 from GitHub Packages** – double-check `GITHUB_ACTOR`/`GITHUB_TOKEN`.
+- **Docker build fails** – ensure `./gradlew quarkusBuild` succeeded so that `build/quarkus-app/` exists.
+- **Tests fail** – services like MySQL, Kafka, and Consul must be available; skip tests until you’re ready to configure them.
 
 ## Docker Build Process
 

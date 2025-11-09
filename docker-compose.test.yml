@@ -7,9 +7,9 @@ networks:
   pipeline-test-network:
     external: true
 
-services:
-  platform-registration-service:
-    image: git.rokkon.com/io-pipeline/platform-registration-service:latest
+  services:
+    platform-registration-service:
+      image: ghcr.io/ai-pipestream/platform-registration-service:latest
     container_name: platform-registration-test
     networks:
       - pipeline-test-network
