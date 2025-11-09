@@ -52,3 +52,5 @@ quarkus.log
 .env
 .env.local
 .env.*.local
+.claude
+.env
