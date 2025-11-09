@@ -4,16 +4,16 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 
-
+def pipelineBomVersion = findProperty('pipelineBomVersion') ?: '0.1.0-SNAPSHOT'
 
 dependencies {
     implementation 'io.quarkus:quarkus-container-image-docker'
-    // Use published BOM from Maven Local
-    implementation platform('ai.pipestream:pipeline-bom:0.1.0-SNAPSHOT')
+    // Import pipeline BOM to align all managed versions
+    implementation platform("ai.pipestream:pipeline-bom:${pipelineBomVersion}")
 
     // Quarkus dependencies
-    implementation 'io.quarkus:quarkus-grpc'
-    implementation 'io.quarkus:quarkus-arc'
+    implementation libs.quarkus.grpc
+    implementation libs.quarkus.arc
     implementation 'io.quarkus:quarkus-hibernate-reactive-panache'
     implementation 'io.quarkus:quarkus-hibernate-orm'
     implementation 'io.quarkus:quarkus-reactive-mysql-client'
@@ -34,20 +34,19 @@ dependencies {
     implementation libs.apicurio.registry.java.sdk
     implementation libs.apicurio.registry.common
 
-    // Pipeline Dev Services extension (automatic compose infrastructure setup)
-    implementation 'ai.pipestream:devservices:0.1.0-SNAPSHOT'
+    // Pipestream libraries - versions managed entirely by the BOM/catalog
+    implementation libs.pipestream.compose.devservices
+    implementation libs.pipestream.grpc.stubs
+    implementation libs.pipestream.commons
+    implementation libs.pipestream.dynamic.grpc
 
-    // Pipeline libraries (published to Maven Local)
-    implementation 'ai.pipestream:grpc-stubs:0.1.0-SNAPSHOT'
-    implementation 'ai.pipestream:pipeline-commons:0.1.0-SNAPSHOT'
-    implementation 'ai.pipestream:dynamic-grpc:0.1.0-SNAPSHOT'
 
     // Testing
-    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation libs.quarkus.junit5
     testImplementation 'io.quarkus:quarkus-junit5-mockito'
     testImplementation 'io.quarkus:quarkus-test-vertx'
     testImplementation 'org.testcontainers:mysql'
-    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation libs.rest.assured
     runtimeOnly libs.quarkus.logging.manager
 }
 
