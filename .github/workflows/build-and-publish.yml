@@ -29,12 +29,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Override Gradle wrapper distributionUrl
-        run: |
-          sed -i 's|distributionUrl=https\\://maven.rokkon.com/gradle-distributions/|distributionUrl=https\\://services.gradle.org/distributions/|g' gradle/wrapper/gradle-wrapper.properties
-          echo "Updated gradle-wrapper.properties:"
-          grep distributionUrl gradle/wrapper/gradle-wrapper.properties
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -74,12 +68,6 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
-      - name: Override Gradle wrapper distributionUrl
-        run: |
-          sed -i 's|distributionUrl=https\\://maven.rokkon.com/gradle-distributions/|distributionUrl=https\\://services.gradle.org/distributions/|g' gradle/wrapper/gradle-wrapper.properties
-          echo "Updated gradle-wrapper.properties:"
-          grep distributionUrl gradle/wrapper/gradle-wrapper.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -128,12 +116,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Override Gradle wrapper distributionUrl
-        run: |
-          sed -i 's|distributionUrl=https\\://maven.rokkon.com/gradle-distributions/|distributionUrl=https\\://services.gradle.org/distributions/|g' gradle/wrapper/gradle-wrapper.properties
-          echo "Updated gradle-wrapper.properties:"
-          grep distributionUrl gradle/wrapper/gradle-wrapper.properties
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -147,19 +129,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image with Quarkus
+      - name: Build application artifact
+        run: ./gradlew clean quarkusBuild -x test --no-daemon
+
+      - name: Build and push Docker image
         env:
-          QUARKUS_CONTAINER_IMAGE_REGISTRY: ghcr.io
-          QUARKUS_CONTAINER_IMAGE_GROUP: io-pipeline
-          QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ github.actor }}
-          QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REGISTRY: ghcr.io
+          IMAGE_REPOSITORY: io-pipeline/platform-registration-service
+          IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+          IMAGE_SHA_TAG: ${{ github.sha }}
         run: |
-          ./gradlew clean quarkusBuild \
-            -Dquarkus.container-image.build=true \
-            -Dquarkus.container-image.push=true \
-            -Dquarkus.container-image.registry=ghcr.io \
-            -Dquarkus.container-image.group=io-pipeline \
-            -Dquarkus.container-image.tag=${{ github.ref_name }}-${{ github.sha }} \
-            -Dquarkus.container-image.additional-tags=${{ github.sha }} \
-            -x test \
-            --no-daemon
+          IMAGE="${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
+
+          docker build \
+            -f src/main/docker/Dockerfile.jvm \
+            -t "${IMAGE}:${IMAGE_TAG}" \
+            .
+
+          docker tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:${IMAGE_SHA_TAG}"
+
+          docker push "${IMAGE}:${IMAGE_TAG}"
+          docker push "${IMAGE}:${IMAGE_SHA_TAG}"
