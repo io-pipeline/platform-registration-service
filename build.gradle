@@ -6,7 +6,7 @@ plugins {
     id 'com.gradleup.nmcp' version '1.2.0'
 }
 
-def pipelineBomVersion = findProperty('pipelineBomVersion') ?: '0.1.0-SNAPSHOT'
+def pipelineBomVersion = findProperty('pipelineBomVersion') ?: '0.1.2-SNAPSHOT'
 
 dependencies {
     implementation 'io.quarkus:quarkus-container-image-docker'
@@ -75,7 +75,7 @@ compileTestJava {
 // Publishing configuration
 publishing {
     publications {
-        maven(MavenPublication) {
+        maven(MavenPublication) { MavenPublication publication ->
             from components.java
             pom {
                 name.set('Platform Registration Service')
