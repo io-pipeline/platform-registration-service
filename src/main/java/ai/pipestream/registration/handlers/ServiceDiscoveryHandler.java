@@ -449,31 +449,65 @@ public class ServiceDiscoveryHandler {
      */
     public Multi<ServiceListResponse> watchServices() {
         LOG.info("Starting service watch stream");
-        
+
         // Send initial list immediately
         Multi<ServiceListResponse> initialList = Multi.createFrom().uni(listServices())
-            .onItem().invoke(response -> 
+            .onItem().invoke(response ->
                 LOG.infof("Sending initial service list with %d services", response.getTotalCount())
             );
-        
+
         // Then poll for changes every 2 seconds
         Multi<ServiceListResponse> updates = Multi.createFrom().ticks().every(Duration.ofSeconds(2))
             .onItem().transformToUniAndConcatenate(tick -> listServices())
-            .onItem().invoke(response -> 
+            .onItem().invoke(response ->
                 LOG.debugf("Service watch update: %d services", response.getTotalCount())
             )
-            .onFailure().invoke(throwable -> 
+            .onFailure().invoke(throwable ->
                 LOG.error("Error during service watch", throwable)
             )
             .onFailure().recoverWithItem(throwable -> {
                 LOG.error("Recovering from error in service watch", throwable);
                 return buildEmptyServiceList();
             });
-        
+
         // Combine initial list with ongoing updates
         return Multi.createBy().concatenating()
             .streams(initialList, updates)
             .onCompletion().invoke(() -> LOG.info("Service watch stream completed"))
             .onCancellation().invoke(() -> LOG.info("Service watch stream cancelled by client"));
+    }
+
+    /**
+     * Watch for real-time updates to the list of all registered modules.
+     * Sends an initial list immediately, then sends updates whenever modules change.
+     */
+    public Multi<ModuleListResponse> watchModules() {
+        LOG.info("Starting module watch stream");
+
+        // Send initial list immediately
+        Multi<ModuleListResponse> initialList = Multi.createFrom().uni(listModules())
+            .onItem().invoke(response ->
+                LOG.infof("Sending initial module list with %d modules", response.getTotalCount())
+            );
+
+        // Then poll for changes every 2 seconds
+        Multi<ModuleListResponse> updates = Multi.createFrom().ticks().every(Duration.ofSeconds(2))
+            .onItem().transformToUniAndConcatenate(tick -> listModules())
+            .onItem().invoke(response ->
+                LOG.debugf("Module watch update: %d modules", response.getTotalCount())
+            )
+            .onFailure().invoke(throwable ->
+                LOG.error("Error during module watch", throwable)
+            )
+            .onFailure().recoverWithItem(throwable -> {
+                LOG.error("Recovering from error in module watch", throwable);
+                return buildEmptyModuleList();
+            });
+
+        // Combine initial list with ongoing updates
+        return Multi.createBy().concatenating()
+            .streams(initialList, updates)
+            .onCompletion().invoke(() -> LOG.info("Module watch stream completed"))
+            .onCancellation().invoke(() -> LOG.info("Module watch stream cancelled by client"));
     }
 }

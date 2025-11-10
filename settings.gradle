@@ -18,11 +18,8 @@ dependencyResolutionManagement {
     }
 
     repositories {
-        // Maven Local for published Pipeline artifacts during development (releases only)
+        // Maven Local for published Pipeline artifacts during development
         mavenLocal {
-            mavenContent {
-                releasesOnly()
-            }
             content {
                 includeGroupByRegex "ai\\.pipestream(\\..*)?"
             }

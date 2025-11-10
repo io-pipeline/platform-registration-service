@@ -113,4 +113,10 @@ public class PlatformRegistrationService extends MutinyPlatformRegistrationGrpc.
         LOG.info("Received request to watch services for real-time updates");
         return discoveryHandler.watchServices();
     }
+
+    @Override
+    public Multi<ModuleListResponse> watchModules(Empty request) {
+        LOG.info("Received request to watch modules for real-time updates");
+        return discoveryHandler.watchModules();
+    }
 }
