@@ -31,7 +31,7 @@ bootstrap_helpers() {
   fi
 
   # Check if already bootstrapped
-  if [ -f "$HELPERS_DIR/shared-utils.sh" ]; then
+  if [ -f "$HELPERS_DIR/scripts/shared-utils.sh" ]; then
     DEV_ASSETS_LOCATION="$HELPERS_DIR"
     return 0
   fi
@@ -41,8 +41,9 @@ bootstrap_helpers() {
   mkdir -p "$HELPERS_DIR"
 
   # Download shared-utils.sh
-  if curl -fsSL "$DEV_ASSETS_REPO/scripts/shared-utils.sh" -o "$HELPERS_DIR/shared-utils.sh" 2>/dev/null; then
-    chmod +x "$HELPERS_DIR/shared-utils.sh"
+  mkdir -p "$HELPERS_DIR/scripts"
+  if curl -fsSL "$DEV_ASSETS_REPO/scripts/shared-utils.sh" -o "$HELPERS_DIR/scripts/shared-utils.sh" 2>/dev/null; then
+    chmod +x "$HELPERS_DIR/scripts/shared-utils.sh"
     echo "✓ Downloaded helper scripts"
     DEV_ASSETS_LOCATION="$HELPERS_DIR"
   else
@@ -54,7 +55,8 @@ bootstrap_helpers() {
 
 create_minimal_helpers() {
   # Create minimal shared-utils.sh with essential functions
-  cat > "$HELPERS_DIR/shared-utils.sh" << 'EOF'
+  mkdir -p "$HELPERS_DIR/scripts"
+  cat > "$HELPERS_DIR/scripts/shared-utils.sh" << 'EOF'
 #!/bin/bash
 # Minimal fallback helper functions
 
@@ -97,14 +99,20 @@ set_registration_host() {
   export $env_var="${!env_var:-localhost}"
 }
 EOF
-  chmod +x "$HELPERS_DIR/shared-utils.sh"
+  chmod +x "$HELPERS_DIR/scripts/shared-utils.sh"
 }
 
 # Bootstrap the helpers
 bootstrap_helpers
 
 # Source shared utilities
-source "$DEV_ASSETS_LOCATION/scripts/shared-utils.sh"
+if [ -f "$DEV_ASSETS_LOCATION/scripts/shared-utils.sh" ]; then
+  source "$DEV_ASSETS_LOCATION/scripts/shared-utils.sh"
+else
+  echo "ERROR: Could not find shared-utils.sh at $DEV_ASSETS_LOCATION/scripts/shared-utils.sh"
+  echo "Bootstrap may have failed. Check network connection."
+  exit 1
+fi
 
 # Service configuration
 SERVICE_NAME="Platform Registration Service"
