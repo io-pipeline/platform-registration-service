@@ -40,16 +40,17 @@ bootstrap_helpers() {
 
   # Bootstrap from GitHub
   echo "🔄 Bootstrapping helper scripts from GitHub..."
-  mkdir -p "$HELPERS_DIR"
+  echo "   Downloading from: $DEV_ASSETS_REPO/scripts/shared-utils.sh"
+  mkdir -p "$HELPERS_DIR/scripts"
 
   # Download shared-utils.sh
-  mkdir -p "$HELPERS_DIR/scripts"
-  if curl -fsSL "$DEV_ASSETS_REPO/scripts/shared-utils.sh" -o "$HELPERS_DIR/scripts/shared-utils.sh" 2>/dev/null; then
+  if curl -fsSL "$DEV_ASSETS_REPO/scripts/shared-utils.sh" -o "$HELPERS_DIR/scripts/shared-utils.sh"; then
     chmod +x "$HELPERS_DIR/scripts/shared-utils.sh"
-    echo "✓ Downloaded helper scripts"
+    echo "✓ Downloaded helper scripts to $HELPERS_DIR/scripts/"
     DEV_ASSETS_LOCATION="$HELPERS_DIR"
   else
-    echo "⚠️  Could not download from dev-assets repo, using minimal fallbacks"
+    echo "⚠️  Could not download from dev-assets repo (network issue or repo not found)"
+    echo "   Creating minimal fallback helpers..."
     create_minimal_helpers
     DEV_ASSETS_LOCATION="$HELPERS_DIR"
   fi
