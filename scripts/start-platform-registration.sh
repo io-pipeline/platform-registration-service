@@ -24,10 +24,10 @@ HELPERS_DIR="$PROJECT_ROOT/.dev-helpers"
 DEV_ASSETS_LOCATION="${DEV_ASSETS_LOCATION:-$HELPERS_DIR}"
 
 bootstrap_helpers() {
-  # Check if local dev-assets checkout exists AND has the required file
-  if [ -f "/home/krickert/IdeaProjects/gitea/dev-assets/scripts/shared-utils.sh" ]; then
-    DEV_ASSETS_LOCATION="/home/krickert/IdeaProjects/gitea/dev-assets"
-    echo "ℹ️  Using local dev-assets checkout"
+  # Check if DEV_ASSETS_LOCATION is explicitly set by user
+  if [ -n "${DEV_ASSETS_LOCATION_OVERRIDE}" ] && [ -f "${DEV_ASSETS_LOCATION_OVERRIDE}/scripts/shared-utils.sh" ]; then
+    DEV_ASSETS_LOCATION="${DEV_ASSETS_LOCATION_OVERRIDE}"
+    echo "ℹ️  Using dev-assets from: $DEV_ASSETS_LOCATION"
     return 0
   fi
 
