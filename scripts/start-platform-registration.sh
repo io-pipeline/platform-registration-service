@@ -106,13 +106,13 @@ bootstrap_helpers
 # Source shared utilities
 source "$DEV_ASSETS_LOCATION/scripts/shared-utils.sh"
 
-# Check dependencies
-check_dependencies "docker" "java"
-
 # Service configuration
 SERVICE_NAME="Platform Registration Service"
 SERVICE_PORT="38101"
 DESCRIPTION="Module registry & health management"
+
+# Check dependencies
+check_dependencies "docker" "java"
 
 # Validate we're in the correct directory
 validate_project_structure "build.gradle" "src/main/resources/application.properties"
