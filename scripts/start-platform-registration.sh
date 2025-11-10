@@ -114,6 +114,13 @@ else
   exit 1
 fi
 
+# Verify functions are available
+if ! type check_dependencies >/dev/null 2>&1; then
+  echo "ERROR: Helper functions not loaded properly"
+  echo "DEV_ASSETS_LOCATION: $DEV_ASSETS_LOCATION"
+  exit 1
+fi
+
 # Service configuration
 SERVICE_NAME="Platform Registration Service"
 SERVICE_PORT="38101"
