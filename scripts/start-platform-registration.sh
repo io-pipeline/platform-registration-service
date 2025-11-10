@@ -4,13 +4,106 @@
 # Port: 38101 (Core Service)
 # This script helps start the platform registration service in development mode
 # with proper environment variable detection and instance management.
+#
+# Bootstrap Design: Like Gradle Wrapper
+# - Automatically downloads helper scripts from GitHub if not available locally
+# - Works OOTB on Windows/Mac/Linux right after checkout
+# - No manual dev-assets setup required
 
 set -e
 
-# Configuration - Update this path to your dev-assets checkout location
-DEV_ASSETS_LOCATION="${DEV_ASSETS_LOCATION:-/home/krickert/IdeaProjects/gitea/dev-assets}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR/.."
 
-# Source shared utilities from dev-assets
+# ============================================================================
+# Bootstrap Helper Scripts from GitHub (like gradlew)
+# ============================================================================
+
+DEV_ASSETS_REPO="https://raw.githubusercontent.com/ai-pipestream/dev-assets/main"
+HELPERS_DIR="$PROJECT_ROOT/.dev-helpers"
+DEV_ASSETS_LOCATION="${DEV_ASSETS_LOCATION:-$HELPERS_DIR}"
+
+bootstrap_helpers() {
+  # Check if local dev-assets checkout exists
+  if [ -d "/home/krickert/IdeaProjects/gitea/dev-assets" ]; then
+    DEV_ASSETS_LOCATION="/home/krickert/IdeaProjects/gitea/dev-assets"
+    return 0
+  fi
+
+  # Check if already bootstrapped
+  if [ -f "$HELPERS_DIR/shared-utils.sh" ]; then
+    DEV_ASSETS_LOCATION="$HELPERS_DIR"
+    return 0
+  fi
+
+  # Bootstrap from GitHub
+  echo "🔄 Bootstrapping helper scripts from GitHub..."
+  mkdir -p "$HELPERS_DIR"
+
+  # Download shared-utils.sh
+  if curl -fsSL "$DEV_ASSETS_REPO/scripts/shared-utils.sh" -o "$HELPERS_DIR/shared-utils.sh" 2>/dev/null; then
+    chmod +x "$HELPERS_DIR/shared-utils.sh"
+    echo "✓ Downloaded helper scripts"
+    DEV_ASSETS_LOCATION="$HELPERS_DIR"
+  else
+    echo "⚠️  Could not download from dev-assets repo, using minimal fallbacks"
+    create_minimal_helpers
+    DEV_ASSETS_LOCATION="$HELPERS_DIR"
+  fi
+}
+
+create_minimal_helpers() {
+  # Create minimal shared-utils.sh with essential functions
+  cat > "$HELPERS_DIR/shared-utils.sh" << 'EOF'
+#!/bin/bash
+# Minimal fallback helper functions
+
+check_dependencies() {
+  for cmd in "$@"; do
+    command -v "$cmd" >/dev/null 2>&1 || { echo "ERROR: $cmd is required but not installed"; exit 1; }
+  done
+}
+
+check_port() {
+  lsof -i ":$1" >/dev/null 2>&1
+}
+
+kill_process_on_port() {
+  local port=$1
+  local pid=$(lsof -t -i ":$port" 2>/dev/null)
+  [ -n "$pid" ] && kill "$pid" 2>/dev/null
+}
+
+validate_project_structure() {
+  for file in "$@"; do
+    [ ! -f "$file" ] && { echo "ERROR: Expected file not found: $file"; exit 1; }
+  done
+}
+
+print_status() {
+  local level=$1
+  shift
+  case "$level" in
+    header) echo "==========================================" ;;
+    info) echo "ℹ️  $*" ;;
+    warning) echo "⚠️  $*" ;;
+    error) echo "❌ $*" ;;
+  esac
+}
+
+set_registration_host() {
+  local service_name=$1
+  local env_var=$2
+  export $env_var="${!env_var:-localhost}"
+}
+EOF
+  chmod +x "$HELPERS_DIR/shared-utils.sh"
+}
+
+# Bootstrap the helpers
+bootstrap_helpers
+
+# Source shared utilities
 source "$DEV_ASSETS_LOCATION/scripts/shared-utils.sh"
 
 # Check dependencies

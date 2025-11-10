@@ -54,3 +54,4 @@ quarkus.log
 .env.*.local
 .claude
 .env
+.dev-helpers/
