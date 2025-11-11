@@ -84,15 +84,15 @@ publishing {
 
                 licenses {
                     license {
-                        name.set('Apache License 2.0')
-                        url.set('https://www.apache.org/licenses/LICENSE-2.0')
+                        name.set('MIT License')
+                        url.set('https://opensource.org/license/mit')
                     }
                 }
 
                 developers {
                     developer {
                         id.set('krickert')
-                        name.set('Pipeline Engine Team')
+                        name.set('Pipestream Engine Team')
                     }
                 }
 
