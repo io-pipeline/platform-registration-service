@@ -234,6 +234,21 @@ public class ModuleRepository {
     }
     
     /**
+     * Get latest schema for a service (most recently created)
+     */
+    public Uni<ConfigSchema> findLatestSchemaByServiceName(String serviceName) {
+        return sessionFactory.withSession(session ->
+            session.createQuery(
+                "FROM ConfigSchema WHERE serviceName = :serviceName ORDER BY createdAt DESC",
+                ConfigSchema.class
+            )
+            .setParameter("serviceName", serviceName)
+            .setMaxResults(1)
+            .getSingleResultOrNull()
+        );
+    }
+    
+    /**
      * Get all schemas needing sync to Apicurio
      */
     public Uni<List<ConfigSchema>> findSchemasNeedingSync() {
