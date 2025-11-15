@@ -37,6 +37,14 @@ public class OpenSearchEventsProducer {
     @Channel("opensearch-module-unregistered-events")
     MutinyEmitter<ModuleUnregistered> moduleUnregisteredEmitter;
 
+    /**
+     * Emit a service registered event to Kafka for OpenSearch indexing
+     * @param serviceId The unique service ID
+     * @param serviceName The name of the service
+     * @param host The host address
+     * @param port The port number
+     * @param version The service version
+     */
     public void emitServiceRegistered(String serviceId, String serviceName, String host, int port, String version) {
         try {
             ServiceRegistered event = ServiceRegistered.newBuilder()
@@ -60,6 +68,11 @@ public class OpenSearchEventsProducer {
         }
     }
 
+    /**
+     * Emit a service unregistered event to Kafka for OpenSearch indexing
+     * @param serviceId The unique service ID
+     * @param serviceName The name of the service
+     */
     public void emitServiceUnregistered(String serviceId, String serviceName) {
         try {
             ServiceUnregistered event = ServiceUnregistered.newBuilder()
@@ -80,7 +93,17 @@ public class OpenSearchEventsProducer {
         }
     }
 
-    public void emitModuleRegistered(String serviceId, String moduleName, String host, int port, 
+    /**
+     * Emit a module registered event to Kafka for OpenSearch indexing
+     * @param serviceId The unique service ID
+     * @param moduleName The name of the module
+     * @param host The host address
+     * @param port The port number
+     * @param version The module version
+     * @param schemaId The schema ID
+     * @param apicurioArtifactId The Apicurio artifact ID
+     */
+    public void emitModuleRegistered(String serviceId, String moduleName, String host, int port,
                                     String version, String schemaId, String apicurioArtifactId) {
         try {
             ModuleRegistered event = ModuleRegistered.newBuilder()
@@ -106,6 +129,11 @@ public class OpenSearchEventsProducer {
         }
     }
 
+    /**
+     * Emit a module unregistered event to Kafka for OpenSearch indexing
+     * @param serviceId The unique service ID
+     * @param moduleName The name of the module
+     */
     public void emitModuleUnregistered(String serviceId, String moduleName) {
         try {
             ModuleUnregistered event = ModuleUnregistered.newBuilder()
@@ -126,6 +154,10 @@ public class OpenSearchEventsProducer {
         }
     }
 
+    /**
+     * Create a Protobuf timestamp from current system time
+     * @return Protobuf Timestamp representing current time
+     */
     private Timestamp createTimestamp() {
         long millis = System.currentTimeMillis();
         return Timestamp.newBuilder()

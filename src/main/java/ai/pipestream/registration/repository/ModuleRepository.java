@@ -128,6 +128,11 @@ public class ModuleRepository {
     /**
      * Sync schema to Apicurio Registry
      */
+    /**
+     * Synchronize schema to Apicurio Registry
+     * @param schema The schema to synchronize
+     * @return Uni emitting the updated schema with sync status
+     */
     private Uni<ConfigSchema> syncSchemaToApicurio(ConfigSchema schema) {
         return apicurioClient.createOrUpdateSchema(
                 schema.serviceName,

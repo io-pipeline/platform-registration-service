@@ -341,6 +341,11 @@ public class ServiceDiscoveryHandler {
             });
     }
     
+    /**
+     * Convert a Consul ServiceEntry to ServiceDetails
+     * @param entry The Consul service entry
+     * @return ServiceDetails instance
+     */
     private ServiceDetails convertToServiceDetails(io.vertx.ext.consul.ServiceEntry entry) {
         var service = entry.getService();
         ServiceDetails.Builder builder = ServiceDetails.newBuilder()
@@ -375,6 +380,11 @@ public class ServiceDiscoveryHandler {
         return builder.build();
     }
     
+    /**
+     * Convert a Consul ServiceEntry to ModuleDetails
+     * @param entry The Consul service entry
+     * @return ModuleDetails instance
+     */
     private ModuleDetails convertToModuleDetails(io.vertx.ext.consul.ServiceEntry entry) {
         var service = entry.getService();
         ModuleDetails.Builder builder = ModuleDetails.newBuilder()
@@ -405,10 +415,20 @@ public class ServiceDiscoveryHandler {
         return builder.build();
     }
     
+    /**
+     * Check if a service is tagged as a module
+     * @param tags List of service tags
+     * @return true if service is a module, false otherwise
+     */
     private boolean isModule(List<String> tags) {
         return tags != null && tags.contains("module");
     }
     
+    /**
+     * Extract service name from a service ID
+     * @param serviceId The service ID in format serviceName-host-port
+     * @return The extracted service name, or null if invalid format
+     */
     private String extractServiceNameFromId(String serviceId) {
         // Format: serviceName-host-port
         int lastDash = serviceId.lastIndexOf('-');
@@ -421,6 +441,10 @@ public class ServiceDiscoveryHandler {
         return withoutPort.substring(0, secondLastDash);
     }
     
+    /**
+     * Build an empty service list response
+     * @return Empty ServiceListResponse
+     */
     private ServiceListResponse buildEmptyServiceList() {
         return ServiceListResponse.newBuilder()
             .setAsOf(createTimestamp())
@@ -428,6 +452,10 @@ public class ServiceDiscoveryHandler {
             .build();
     }
     
+    /**
+     * Build an empty module list response
+     * @return Empty ModuleListResponse
+     */
     private ModuleListResponse buildEmptyModuleList() {
         return ModuleListResponse.newBuilder()
             .setAsOf(createTimestamp())

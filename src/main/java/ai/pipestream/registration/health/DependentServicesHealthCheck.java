@@ -53,6 +53,10 @@ public class DependentServicesHealthCheck implements HealthCheck {
         return responseBuilder.build();
     }
 
+    /**
+     * Check MySQL database connection health
+     * @param builder The health check response builder
+     */
     private void checkMySQL(HealthCheckResponseBuilder builder) {
         try {
             // Use reactive MySQL client to check connection
@@ -69,6 +73,10 @@ public class DependentServicesHealthCheck implements HealthCheck {
         }
     }
     
+    /**
+     * Check Consul service registry connection health
+     * @param builder The health check response builder
+     */
     private void checkConsul(HealthCheckResponseBuilder builder) {
         try {
             // Check Consul agent connectivity using Mutiny API
@@ -84,6 +92,10 @@ public class DependentServicesHealthCheck implements HealthCheck {
         }
     }
     
+    /**
+     * Check Apicurio Registry connection health
+     * @param builder The health check response builder
+     */
     private void checkApicurio(HealthCheckResponseBuilder builder) {
         try {
             // Check Apicurio Registry health
