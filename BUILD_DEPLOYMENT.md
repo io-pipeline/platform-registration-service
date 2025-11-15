@@ -128,6 +128,32 @@ DOCKERHUB_USERNAME       # Docker Hub username
 DOCKERHUB_TOKEN          # Docker Hub access token
 ```
 
+## Artifact Repositories
+
+We publish artifacts to two repositories:
+
+- Canonical: Maven Central (SNAPSHOT and release)
+- Secondary: GitHub Packages (GPR) for CI/internal convenience
+
+GitHub Packages requires authentication even for public artifacts.
+For local development, add credentials to `~/.gradle/gradle.properties`:
+
+```
+# GitHub Packages (optional, for faster/internal use)
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_PAT  # needs read:packages (and write:packages if publishing locally)
+```
+
+The CI uses `GITHUB_ACTOR` and `GITHUB_TOKEN` automatically when running in GitHub Actions.
+
+### Snapshot Publishing
+- Maven Central: automatic on push to main
+- GitHub Packages: automatic on push to main
+
+### Release Publishing
+- Maven Central: automatic in Release workflow
+- GitHub Packages: automatic in Release workflow
+
 ## Docker Images
 
 ### Production Images

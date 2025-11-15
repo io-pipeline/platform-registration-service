@@ -142,6 +142,20 @@ publishing {
         // Publish to Maven Local for development
         mavenLocal()
 
+        // Conditionally add GitHub Packages repository when credentials are available
+        def ghRepo = System.getenv('GITHUB_REPOSITORY') ?: 'ai-pipestream/platform-registration-service'
+        def ghActor = System.getenv('GITHUB_ACTOR') ?: (project.findProperty('gpr.user') ?: System.getenv('GPR_USER'))
+        def ghToken = System.getenv('GITHUB_TOKEN') ?: (project.findProperty('gpr.key') ?: System.getenv('GPR_TOKEN'))
+        if (ghActor && ghToken) {
+            maven {
+                name = 'GitHubPackages'
+                url = uri("https://maven.pkg.github.com/${ghRepo}")
+                credentials {
+                    username = ghActor
+                    password = ghToken
+                }
+            }
+        }
     }
 }
 
