@@ -551,7 +551,7 @@ docker run -d \
 
 ### Release Process
 1. Ensure changes are merged to main
-2. Go to GitHub Actions → "Build and Publish"
+2. Go to GitHub Actions → **"Release and Publish"**
 3. Click "Run workflow" and select version bump type
 4. Monitor pipeline completion
 5. Verify release in GitHub releases

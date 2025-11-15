@@ -87,6 +87,26 @@ The service uses [axion-release](https://axion-release-plugin.readthedocs.io/) f
   - Choose version bump type
   - Optional custom version for manual entry
 
+## Workflow Architecture
+
+The build system uses **two separate workflows** for clear separation of concerns:
+
+### 1. Build and Publish Workflow (`build-and-publish.yml`)
+- **Trigger**: Push to main, PR to main
+- **Purpose**: Continuous integration and snapshot publishing
+- **Jobs**:
+  - `build` - Compile, test, validate codebase
+  - `publish-snapshots` - Publish SNAPSHOT versions to Maven Central
+  - `docker-snapshot` - Build and push snapshot Docker images
+
+### 2. Release and Publish Workflow (`release-and-publish.yml`)
+- **Trigger**: Manual workflow dispatch only
+- **Purpose**: Production releases with versioning
+- **Jobs**:
+  - `build` - Compile, test, validate codebase
+  - `release` - Create version, tag, publish to Maven Central, create GitHub release
+  - `docker-production` - Build and push production Docker images
+
 ## Required Secrets
 
 ### Maven Central Publishing
@@ -132,7 +152,7 @@ DOCKERHUB_TOKEN          # Docker Hub access token
 - Update documentation if needed
 
 ### 2. Trigger Release
-1. Go to GitHub Actions → "Build and Publish"
+1. Go to GitHub Actions → **"Release and Publish"**
 2. Click "Run workflow"
 3. Select version bump type:
    - `patch`: Bug fixes (1.2.3 → 1.2.4)
@@ -283,7 +303,7 @@ docker run -d \
 ## Quick Reference
 
 ### Trigger Release
-1. GitHub Actions → "Build and Publish" → "Run workflow"
+1. GitHub Actions → **"Release and Publish"** → "Run workflow"
 2. Select bump type → Run
 
 ### Check Version
