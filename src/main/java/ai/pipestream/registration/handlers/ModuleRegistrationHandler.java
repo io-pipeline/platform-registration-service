@@ -185,6 +185,9 @@ public class ModuleRegistrationHandler {
     }
     
     // Helper classes to pass context through the chain
+    /**
+     * Helper class to pass database save context through the reactive chain
+     */
     private static class DatabaseSaveContext {
         final ServiceModule module;
         final ServiceRegistrationMetadata metadata;

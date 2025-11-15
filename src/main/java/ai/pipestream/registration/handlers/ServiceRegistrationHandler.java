@@ -123,13 +123,25 @@ public class ServiceRegistrationHandler {
                 return response.build();
             });
     }
-    
+
+    /**
+     * Validate that the service registration request contains all required fields
+     * @param request The service registration request to validate
+     * @return true if valid, false otherwise
+     */
     private boolean validateServiceRequest(ServiceRegistrationRequest request) {
         return !request.getServiceName().isEmpty() && 
                !request.getHost().isEmpty() && 
                request.getPort() > 0;
     }
-    
+
+    /**
+     * Create a registration event with the given parameters
+     * @param type The event type
+     * @param message The event message
+     * @param serviceId The service ID (nullable)
+     * @return A new RegistrationEvent instance
+     */
     private RegistrationEvent createEvent(EventType type, String message, String serviceId) {
         RegistrationEvent.Builder builder = RegistrationEvent.newBuilder()
             .setEventType(type)
@@ -142,7 +154,14 @@ public class ServiceRegistrationHandler {
         
         return builder.build();
     }
-    
+
+    /**
+     * Create a failed registration event with error details
+     * @param serviceId The service ID (nullable)
+     * @param message The error message
+     * @param errorDetail Additional error details
+     * @return A new RegistrationEvent instance with FAILED type
+     */
     private RegistrationEvent createEventWithError(String serviceId, String message, String errorDetail) {
         RegistrationEvent.Builder builder = RegistrationEvent.newBuilder()
             .setEventType(EventType.FAILED)
@@ -156,7 +175,11 @@ public class ServiceRegistrationHandler {
         
         return builder.build();
     }
-    
+
+    /**
+     * Create a Protobuf timestamp from current system time
+     * @return Protobuf Timestamp representing current time
+     */
     private Timestamp createTimestamp() {
         long millis = System.currentTimeMillis();
         return Timestamp.newBuilder()

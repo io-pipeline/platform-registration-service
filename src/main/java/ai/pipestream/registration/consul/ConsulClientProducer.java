@@ -9,6 +9,10 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+/**
+ * Producer for creating Consul client instances configured with application properties.
+ * Provides a singleton Consul client for service registration and discovery operations.
+ */
 @ApplicationScoped
 public class ConsulClientProducer {
     
@@ -23,6 +27,10 @@ public class ConsulClientProducer {
     @ConfigProperty(name = "pipeline.consul.port", defaultValue = "8500")
     int consulPort;
     
+    /**
+     * Produces a configured Consul client instance
+     * @return Configured ConsulClient for interacting with Consul
+     */
     @Produces
     @ApplicationScoped
     public ConsulClient produceConsulClient() {

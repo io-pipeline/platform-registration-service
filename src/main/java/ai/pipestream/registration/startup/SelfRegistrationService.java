@@ -61,6 +61,10 @@ public class SelfRegistrationService {
     /**
      * Auto-register on startup if enabled
      */
+    /**
+     * Auto-register service on startup if enabled
+     * @param ev The startup event
+     */
     void onStart(@Observes StartupEvent ev) {
         if (!registrationEnabled) {
             LOG.info("Service registration disabled");
@@ -92,6 +96,10 @@ public class SelfRegistrationService {
 
     /**
      * Build service registration request from configuration properties
+     */
+    /**
+     * Build service registration request from configuration properties
+     * @return ServiceRegistrationRequest configured from application properties
      */
     private ServiceRegistrationRequest buildServiceRequest() {
         ServiceRegistrationRequest.Builder builder = ServiceRegistrationRequest.newBuilder()
@@ -128,6 +136,10 @@ public class SelfRegistrationService {
 
     /**
      * Determine the host to register with
+     */
+    /**
+     * Determine the host to register with by checking environment variables and config
+     * @return The host address to use for registration
      */
     private String determineHost() {
         // Check for override environment variable

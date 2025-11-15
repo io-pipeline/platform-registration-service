@@ -224,6 +224,12 @@ public class ApicurioRegistryClient {
         });
     }
 
+    /**
+     * Generate a versioned artifact ID for Apicurio Registry
+     * @param serviceName The service name
+     * @param version The version
+     * @return The versioned artifact ID
+     */
     private String versionedArtifactId(String serviceName, String version) {
         String safeVersion = (version == null || version.isBlank()) ? "v1" : ("v" + version.replace('.', '_'));
         return serviceName + "-config-" + safeVersion;
@@ -255,6 +261,9 @@ public class ApicurioRegistryClient {
         });
     }
 
+    /**
+     * Response from schema registration containing artifact details
+     */
     public static class SchemaRegistrationResponse {
         private final String artifactId;
         private final Long globalId;

@@ -25,6 +25,9 @@ public class ConsulRegistrar {
     
     /**
      * Register a service with Consul including health check configuration
+     * @param request The service registration request containing service details
+     * @param serviceId The unique service identifier
+     * @return Uni emitting true if registration succeeds, false otherwise
      */
     public Uni<Boolean> registerService(ServiceRegistrationRequest request, String serviceId) {
         ServiceOptions serviceOptions = new ServiceOptions()
@@ -67,6 +70,8 @@ public class ConsulRegistrar {
     
     /**
      * Unregister a service from Consul
+     * @param serviceId The unique service identifier to unregister
+     * @return Uni emitting true if unregistration succeeds, false otherwise
      */
     public Uni<Boolean> unregisterService(String serviceId) {
         LOG.infof("Unregistering service from Consul: %s", serviceId);
@@ -84,6 +89,10 @@ public class ConsulRegistrar {
     
     /**
      * Generate a consistent service ID from service details
+     * @param serviceName The name of the service
+     * @param host The host address
+     * @param port The port number
+     * @return A unique service ID in the format "serviceName-host-port"
      */
     public static String generateServiceId(String serviceName, String host, int port) {
         return String.format("%s-%s-%d", serviceName, host, port);

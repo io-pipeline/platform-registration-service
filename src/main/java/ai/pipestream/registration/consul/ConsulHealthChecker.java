@@ -82,6 +82,8 @@ public class ConsulHealthChecker {
     
     /**
      * Extract service name from serviceId (format: serviceName-host-port)
+     * @param serviceId The full service ID to parse
+     * @return The extracted service name, or null if format is invalid
      */
     private String extractServiceName(String serviceId) {
         int lastDash = serviceId.lastIndexOf('-');
