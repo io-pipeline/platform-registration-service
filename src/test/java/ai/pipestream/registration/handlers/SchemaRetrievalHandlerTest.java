@@ -20,8 +20,12 @@ import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
@@ -70,16 +74,25 @@ class SchemaRetrievalHandlerTest {
             .await().indefinitely();
 
         // Assert
-        assertNotNull(response);
-        assertEquals(serviceName, response.getModuleName());
-        assertEquals(jsonSchema, response.getSchemaJson());
-        assertEquals(version, response.getSchemaVersion());
-        assertEquals("test-artifact-id", response.getArtifactId());
-        assertTrue(response.containsMetadata("created_by"));
-        assertEquals("test-user", response.getMetadataOrThrow("created_by"));
-        assertTrue(response.containsMetadata("sync_status"));
-        assertEquals("SYNCED", response.getMetadataOrThrow("sync_status"));
-        assertTrue(response.hasUpdatedAt());
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Module name should match the requested service name",
+            response.getModuleName(), is(equalTo(serviceName)));
+        assertThat("Schema JSON should match the stored schema",
+            response.getSchemaJson(), is(equalTo(jsonSchema)));
+        assertThat("Schema version should match the requested version",
+            response.getSchemaVersion(), is(equalTo(version)));
+        assertThat("Artifact ID should match the stored artifact ID",
+            response.getArtifactId(), is(equalTo("test-artifact-id")));
+        assertThat("Response should contain created_by metadata",
+            response.containsMetadata("created_by"), is(true));
+        assertThat("Created by metadata should match the stored value",
+            response.getMetadataOrThrow("created_by"), is(equalTo("test-user")));
+        assertThat("Response should contain sync_status metadata",
+            response.containsMetadata("sync_status"), is(true));
+        assertThat("Sync status should be SYNCED",
+            response.getMetadataOrThrow("sync_status"), is(equalTo("SYNCED")));
+        assertThat("Response should have updatedAt timestamp",
+            response.hasUpdatedAt(), is(true));
 
         verify(moduleRepository).findSchemaById(anyString());
         verifyNoInteractions(apicurioClient, grpcClientFactory);
@@ -106,10 +119,12 @@ class SchemaRetrievalHandlerTest {
             .await().indefinitely();
 
         // Assert
-        assertNotNull(response);
-        assertEquals(serviceName, response.getModuleName());
-        assertEquals(jsonSchema, response.getSchemaJson());
-        
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Module name should match the requested service name",
+            response.getModuleName(), is(equalTo(serviceName)));
+        assertThat("Schema JSON should match the latest schema",
+            response.getSchemaJson(), is(equalTo(jsonSchema)));
+
         verify(moduleRepository).findLatestSchemaByServiceName(eq(serviceName));
         verifyNoInteractions(apicurioClient, grpcClientFactory);
     }
@@ -140,10 +155,13 @@ class SchemaRetrievalHandlerTest {
             .await().indefinitely();
 
         // Assert
-        assertNotNull(response);
-        assertEquals(serviceName, response.getModuleName());
-        assertEquals(jsonSchema, response.getSchemaJson());
-        assertEquals(version, response.getSchemaVersion());
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Module name should match the requested service name",
+            response.getModuleName(), is(equalTo(serviceName)));
+        assertThat("Schema JSON should match the schema from Apicurio",
+            response.getSchemaJson(), is(equalTo(jsonSchema)));
+        assertThat("Schema version should match the requested version",
+            response.getSchemaVersion(), is(equalTo(version)));
 
         verify(moduleRepository).findSchemaById(anyString());
         verify(apicurioClient).getSchema(eq(serviceName), eq(version));
@@ -186,16 +204,25 @@ class SchemaRetrievalHandlerTest {
             .await().indefinitely();
 
         // Assert
-        assertNotNull(response);
-        assertEquals(serviceName, response.getModuleName());
-        assertEquals(jsonSchema, response.getSchemaJson());
-        assertEquals("1.0.0", response.getSchemaVersion());
-        assertTrue(response.containsMetadata("source"));
-        assertEquals("module-direct", response.getMetadataOrThrow("source"));
-        assertTrue(response.containsMetadata("display_name"));
-        assertEquals("Test Module", response.getMetadataOrThrow("display_name"));
-        assertTrue(response.containsMetadata("description"));
-        assertEquals("Test Description", response.getMetadataOrThrow("description"));
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Module name should match the requested service name",
+            response.getModuleName(), is(equalTo(serviceName)));
+        assertThat("Schema JSON should match the schema from module",
+            response.getSchemaJson(), is(equalTo(jsonSchema)));
+        assertThat("Schema version should match the module version",
+            response.getSchemaVersion(), is(equalTo("1.0.0")));
+        assertThat("Response should contain source metadata",
+            response.containsMetadata("source"), is(true));
+        assertThat("Source metadata should indicate module-direct retrieval",
+            response.getMetadataOrThrow("source"), is(equalTo("module-direct")));
+        assertThat("Response should contain display_name metadata",
+            response.containsMetadata("display_name"), is(true));
+        assertThat("Display name should match the module's display name",
+            response.getMetadataOrThrow("display_name"), is(equalTo("Test Module")));
+        assertThat("Response should contain description metadata",
+            response.containsMetadata("description"), is(true));
+        assertThat("Description should match the module's description",
+            response.getMetadataOrThrow("description"), is(equalTo("Test Description")));
     }
 
     @Test
@@ -229,10 +256,13 @@ class SchemaRetrievalHandlerTest {
             .await().indefinitely();
 
         // Assert
-        assertNotNull(response);
-        assertEquals(serviceName, response.getModuleName());
-        assertTrue(response.getSchemaJson().contains("openapi"));
-        assertTrue(response.getSchemaJson().contains(serviceName + " Configuration"));
+        assertThat("Response should not be null", response, is(notNullValue()));
+        assertThat("Module name should match the requested service name",
+            response.getModuleName(), is(equalTo(serviceName)));
+        assertThat("Schema JSON should contain openapi specification",
+            response.getSchemaJson(), containsString("openapi"));
+        assertThat("Schema JSON should contain module configuration reference",
+            response.getSchemaJson(), containsString(serviceName + " Configuration"));
     }
 
     @Test
@@ -254,11 +284,13 @@ class SchemaRetrievalHandlerTest {
             .build();
 
         // Act & Assert
-        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> {
-            schemaRetrievalHandler.getModuleSchema(request).await().indefinitely();
-        });
+        StatusRuntimeException exception = assertThrows(StatusRuntimeException.class, () -> schemaRetrievalHandler.getModuleSchema(request).await().indefinitely());
 
-        assertEquals(Status.NOT_FOUND.getCode(), exception.getStatus().getCode());
-        assertTrue(exception.getStatus().getDescription().contains("Module schema not found"));
+        assertThat("Exception status code should be NOT_FOUND",
+            exception.getStatus().getCode(), is(equalTo(Status.NOT_FOUND.getCode())));
+        assertThat("Exception should have a description",
+            exception.getStatus().getDescription(), is(notNullValue()));
+        assertThat("Exception description should contain 'Module schema not found'",
+            exception.getStatus().getDescription(), containsString("Module schema not found"));
     }
 }

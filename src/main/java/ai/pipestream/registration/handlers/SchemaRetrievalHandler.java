@@ -10,7 +10,6 @@ import ai.pipestream.registration.repository.ApicurioRegistryClient;
 import ai.pipestream.registration.repository.ModuleRepository;
 import com.google.protobuf.Timestamp;
 import io.apicurio.registry.rest.client.models.ArtifactMetaData;
-import io.apicurio.registry.rest.client.models.VersionMetaData;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.smallrye.mutiny.Uni;
@@ -19,7 +18,6 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 /**
@@ -53,8 +51,7 @@ public class SchemaRetrievalHandler {
         
         // Try to get schema from database first (system of record)
         return getSchemaFromDatabase(serviceName, version)
-            .onItem().ifNotNull().transformToUni(schema -> 
-                buildResponseFromDatabase(schema)
+            .onItem().ifNotNull().transformToUni(this::buildResponseFromDatabase
             )
             .onItem().ifNull().switchTo(() -> {
                 LOG.debugf("Schema not found in database for %s:%s, trying Apicurio", 
