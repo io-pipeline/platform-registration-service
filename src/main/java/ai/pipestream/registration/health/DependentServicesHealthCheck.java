@@ -2,7 +2,7 @@ package ai.pipestream.registration.health;
 
 import ai.pipestream.registration.repository.ApicurioRegistryClient;
 import io.vertx.mutiny.ext.consul.ConsulClient;
-import io.vertx.mutiny.mysqlclient.MySQLPool;
+import io.vertx.mutiny.sqlclient.Pool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.health.HealthCheck;
@@ -17,7 +17,7 @@ import java.time.Duration;
  * These checks are automatically exposed via:
  * - REST: /q/health/ready
  * - gRPC: grpc.health.v1.Health service
- * 
+ * <p>
  * Services checked:
  * - MySQL (service registry database)
  * - Consul (service discovery backend)
@@ -28,7 +28,7 @@ import java.time.Duration;
 public class DependentServicesHealthCheck implements HealthCheck {
 
     @Inject
-    MySQLPool mysqlClient;
+    Pool mysqlClient;
     
     @Inject
     ConsulClient consulClient;

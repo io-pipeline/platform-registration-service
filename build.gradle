@@ -72,6 +72,8 @@ version "${scmVersion.version}"
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+    withJavadocJar()
+    withSourcesJar()
 }
 
 test {
@@ -84,6 +86,18 @@ compileJava {
 
 compileTestJava {
     options.encoding = 'UTF-8'
+}
+
+// Configure Javadoc task
+tasks.withType(Javadoc).configureEach { task ->
+    def opts = task.options
+    opts.encoding = 'UTF-8'
+    opts.charSet = 'UTF-8'
+    opts.locale = 'en'
+    // Suppress missing Javadoc warnings for now
+    opts.addStringOption('Xdoclint:-missing', '-quiet')
+    // Exclude internal packages
+    task.exclude('**/internal/**', '**/impl/**', '**/test/**')
 }
 
 // Enable resource filtering to replace @version@ in application.properties
@@ -133,6 +147,37 @@ publishing {
                     connection.set('scm:git:git://github.com/ai-pipestream/platform-registration-service.git')
                     developerConnection.set('scm:git:ssh://github.com/ai-pipestream/platform-registration-service.git')
                     url.set('https://github.com/ai-pipestream/platform-registration-service')
+                }
+
+                // Ensure BOM/platform dependency is included in dependencyManagement
+                // This ensures Maven Central can resolve dependency versions from the BOM
+                withXml {
+                    def projectNode = asNode()
+                    def dependencyManagementNode = projectNode.get('dependencyManagement')
+                    def depsNode
+                    if (dependencyManagementNode.isEmpty()) {
+                        depsNode = projectNode.appendNode('dependencyManagement').appendNode('dependencies')
+                    } else {
+                        depsNode = dependencyManagementNode[0].get('dependencies')
+                        if (depsNode.isEmpty()) {
+                            depsNode = dependencyManagementNode[0].appendNode('dependencies')
+                        } else {
+                            depsNode = depsNode[0]
+                        }
+                    }
+                    // Check if pipeline-bom already exists
+                    def existingBom = depsNode.children().find { dep ->
+                        dep.groupId?.text() == 'ai.pipestream' && 
+                        dep.artifactId?.text() == 'pipeline-bom'
+                    }
+                    if (!existingBom) {
+                        def bomDependency = depsNode.appendNode('dependency')
+                        bomDependency.appendNode('groupId', 'ai.pipestream')
+                        bomDependency.appendNode('artifactId', 'pipeline-bom')
+                        bomDependency.appendNode('version', pipelineBomVersion)
+                        bomDependency.appendNode('type', 'pom')
+                        bomDependency.appendNode('scope', 'import')
+                    }
                 }
             }
         }
