@@ -43,7 +43,7 @@ public class SchemaRetrievalHandler {
      * Get module configuration schema from Apicurio Registry or fallback to module direct call
      */
     public Uni<ModuleSchemaResponse> getModuleSchema(GetModuleSchemaRequest request) {
-        String serviceName = request.getServiceName();
+        String serviceName = request.getModuleName();
         String version = request.hasVersion() && !request.getVersion().isEmpty() 
             ? request.getVersion() 
             : null;
@@ -86,7 +86,7 @@ public class SchemaRetrievalHandler {
      */
     private Uni<ModuleSchemaResponse> buildResponseFromDatabase(ConfigSchema schema) {
         ModuleSchemaResponse.Builder builder = ModuleSchemaResponse.newBuilder()
-            .setServiceName(schema.serviceName)
+            .setModuleName(schema.serviceName)
             .setSchemaJson(schema.jsonSchema)
             .setSchemaVersion(schema.schemaVersion);
         
@@ -140,7 +140,7 @@ public class SchemaRetrievalHandler {
             ArtifactMetaData metadata) {
         
         ModuleSchemaResponse.Builder builder = ModuleSchemaResponse.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .setSchemaJson(schemaContent)
             .setSchemaVersion(version);
         
@@ -162,7 +162,7 @@ public class SchemaRetrievalHandler {
             }
             
             if (metadata.getModifiedOn() != null) {
-                Instant instant = Instant.ofEpochMilli(metadata.getModifiedOn());
+                Instant instant = Instant.ofEpochMilli(metadata.getModifiedOn().toEpochSecond() * 1000 + metadata.getModifiedOn().getNano() / 1000000) ;
                 builder.setUpdatedAt(Timestamp.newBuilder()
                     .setSeconds(instant.getEpochSecond())
                     .setNanos(instant.getNano())
@@ -203,7 +203,7 @@ public class SchemaRetrievalHandler {
             ServiceRegistrationMetadata metadata) {
         
         ModuleSchemaResponse.Builder builder = ModuleSchemaResponse.newBuilder()
-            .setServiceName(serviceName);
+            .setModuleName(serviceName);
         
         if (metadata.hasJsonConfigSchema() && !metadata.getJsonConfigSchema().isBlank()) {
             builder.setSchemaJson(metadata.getJsonConfigSchema());
@@ -212,7 +212,7 @@ public class SchemaRetrievalHandler {
             builder.setSchemaJson(synthesizeDefaultSchema(serviceName));
         }
         
-        if (metadata.hasVersion()) {
+        if (!metadata.getVersion().isBlank()) {
             builder.setSchemaVersion(metadata.getVersion());
         } else {
             builder.setSchemaVersion("unknown");

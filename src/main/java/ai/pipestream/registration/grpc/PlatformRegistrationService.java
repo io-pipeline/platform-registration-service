@@ -127,7 +127,7 @@ public class PlatformRegistrationService extends MutinyPlatformRegistrationGrpc.
     @Override
     public Uni<ModuleSchemaResponse> getModuleSchema(GetModuleSchemaRequest request) {
         LOG.infof("Received request to get schema for module: %s, version: %s",
-                 request.getServiceName(),
+                 request.getModuleName(),
                  request.hasVersion() ? request.getVersion() : "latest");
         return schemaRetrievalHandler.getModuleSchema(request);
     }

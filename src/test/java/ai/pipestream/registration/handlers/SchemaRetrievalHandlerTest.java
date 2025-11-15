@@ -61,7 +61,7 @@ class SchemaRetrievalHandlerTest {
             .thenReturn(Uni.createFrom().item(schema));
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .setVersion(version)
             .build();
 
@@ -71,7 +71,7 @@ class SchemaRetrievalHandlerTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(serviceName, response.getServiceName());
+        assertEquals(serviceName, response.getModuleName());
         assertEquals(jsonSchema, response.getSchemaJson());
         assertEquals(version, response.getSchemaVersion());
         assertEquals("test-artifact-id", response.getArtifactId());
@@ -98,7 +98,7 @@ class SchemaRetrievalHandlerTest {
             .thenReturn(Uni.createFrom().item(schema));
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .build(); // No version = latest
 
         // Act
@@ -107,7 +107,7 @@ class SchemaRetrievalHandlerTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(serviceName, response.getServiceName());
+        assertEquals(serviceName, response.getModuleName());
         assertEquals(jsonSchema, response.getSchemaJson());
         
         verify(moduleRepository).findLatestSchemaByServiceName(eq(serviceName));
@@ -131,7 +131,7 @@ class SchemaRetrievalHandlerTest {
             .thenReturn(Uni.createFrom().nullItem());
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .setVersion(version)
             .build();
 
@@ -141,7 +141,7 @@ class SchemaRetrievalHandlerTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(serviceName, response.getServiceName());
+        assertEquals(serviceName, response.getModuleName());
         assertEquals(jsonSchema, response.getSchemaJson());
         assertEquals(version, response.getSchemaVersion());
 
@@ -178,7 +178,7 @@ class SchemaRetrievalHandlerTest {
             .thenReturn(Uni.createFrom().item(metadata));
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .build();
 
         // Act
@@ -187,7 +187,7 @@ class SchemaRetrievalHandlerTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(serviceName, response.getServiceName());
+        assertEquals(serviceName, response.getModuleName());
         assertEquals(jsonSchema, response.getSchemaJson());
         assertEquals("1.0.0", response.getSchemaVersion());
         assertTrue(response.containsMetadata("source"));
@@ -221,7 +221,7 @@ class SchemaRetrievalHandlerTest {
             .thenReturn(Uni.createFrom().item(metadata));
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .build();
 
         // Act
@@ -230,7 +230,7 @@ class SchemaRetrievalHandlerTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(serviceName, response.getServiceName());
+        assertEquals(serviceName, response.getModuleName());
         assertTrue(response.getSchemaJson().contains("openapi"));
         assertTrue(response.getSchemaJson().contains(serviceName + " Configuration"));
     }
@@ -250,7 +250,7 @@ class SchemaRetrievalHandlerTest {
             .thenReturn(Uni.createFrom().failure(new RuntimeException("Service not found")));
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
-            .setServiceName(serviceName)
+            .setModuleName(serviceName)
             .build();
 
         // Act & Assert
