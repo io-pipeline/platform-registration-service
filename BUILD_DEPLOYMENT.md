@@ -346,3 +346,20 @@ docker run -d \
 - JAR files in `build/libs/`
 - Documentation in release assets
 - Docker image references in release notes
+
+## Docker Hub Publishing
+
+We mirror production images (releases) to Docker Hub via a separate workflow. Snapshot images are NOT mirrored to Docker Hub to avoid namespace churn and excessive storage usage across many microservices.
+
+- Workflow: `.github/workflows/dockerhub-publish.yml`
+- Trigger: repository_dispatch event from the release workflow after GHCR push
+- Required repo secrets:
+  - `DOCKER_USER` — Docker Hub login username (robot or personal)
+  - `DOCKER_TOKEN` — Docker Hub access token
+  - `DOCKER_NAMESPACE` — Target namespace (e.g., `pipestreamai`)
+
+Publishing behavior:
+- Releases: tags `<version>` and `latest` are mirrored
+- Snapshots: only pushed to GHCR (not mirrored)
+
+If you later decide to mirror snapshots, re-add the repository_dispatch trigger in `build-and-publish.yml`.

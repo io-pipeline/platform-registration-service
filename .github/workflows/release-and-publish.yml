@@ -257,3 +257,17 @@ jobs:
             -Dquarkus.container-image.tag=${{ needs.release.outputs.version }} \
             -Dquarkus.container-image.additional-tags=latest \
             --no-daemon
+
+      - name: Trigger Docker Hub publish (release)
+        if: success()
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          event-type: dockerhub-publish
+          client-payload: |
+            {
+              "base_image": "ghcr.io/${{ github.repository_owner }}/platform-registration-service",
+              "dockerhub_repo": "${{ secrets.DOCKER_NAMESPACE }}/platform-registration-service",
+              "tags": "${{ needs.release.outputs.version }} latest"
+            }
