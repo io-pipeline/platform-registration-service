@@ -75,7 +75,8 @@ compileTestJava {
 // Publishing configuration
 publishing {
     publications {
-        maven(MavenPublication) { MavenPublication publication ->
+        // Use a named publication to match signing configuration below
+        create('maven', MavenPublication) {
             from components.java
             pom {
                 name.set('Platform Registration Service')
