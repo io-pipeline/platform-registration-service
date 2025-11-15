@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 public class ApicurioRegistryClient {
 
     private static final Logger LOG = Logger.getLogger(ApicurioRegistryClient.class);
-    private static final String DEFAULT_GROUP = "io.pipeline.schemas";
+    private static final String DEFAULT_GROUP = "ai.pipestream.schemas";
 
     @Inject
     Vertx vertx;

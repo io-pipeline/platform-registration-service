@@ -37,7 +37,7 @@ Container image settings are in `src/main/resources/application.properties`:
 
 ```properties
 quarkus.container-image.registry=ghcr.io
-quarkus.container-image.group=io-pipeline
+quarkus.container-image.group=ai-pipestream
 quarkus.container-image.name=platform-registration-service
 quarkus.container-image.tag=latest
 quarkus.container-image.additional-tags=${quarkus.application.version}

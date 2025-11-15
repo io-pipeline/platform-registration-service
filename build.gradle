@@ -84,6 +84,16 @@ compileTestJava {
     options.encoding = 'UTF-8'
 }
 
+// Enable resource filtering to replace @version@ in application.properties
+// Use @ delimiters to avoid conflicts with ${} runtime property placeholders
+processResources {
+    filesMatching('**/*.properties') {
+        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: [
+            version: project.version.toString()
+        ])
+    }
+}
+
 // Publishing configuration
 publishing {
     publications {
