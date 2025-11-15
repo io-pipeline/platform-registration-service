@@ -524,3 +524,36 @@ docker run -e JAVA_DEBUG=true -e JAVA_DEBUG_PORT=*:5005 -p 5005:5005 platform-re
 ## License
 
 This project is part of the Pipeline Platform and follows the same licensing terms as the main project.
+
+## Build and Deployment
+
+For detailed information about building, versioning, and deploying this service, see [BUILD_DEPLOYMENT.md](BUILD_DEPLOYMENT.md).
+
+### Quick Start
+
+#### Local Development
+```bash
+# Build and test
+./gradlew clean build test
+
+# Run locally
+./gradlew quarkus:dev
+```
+
+#### Docker Deployment
+```bash
+# Run with Docker
+docker run -d \
+  --name platform-registration-service \
+  -p 8080:8080 \
+  ghcr.io/ai-pipestream/platform-registration-service:latest
+```
+
+### Release Process
+1. Ensure changes are merged to main
+2. Go to GitHub Actions → "Build and Publish"
+3. Click "Run workflow" and select version bump type
+4. Monitor pipeline completion
+5. Verify release in GitHub releases
+
+For complete deployment instructions, see [DOCKER_RUN.md](DOCKER_RUN.md) and [BUILD_DEPLOYMENT.md](BUILD_DEPLOYMENT.md).
