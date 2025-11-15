@@ -106,11 +106,19 @@ jobs:
             VERSION="${{ github.event.inputs.custom_version }}"
           else
             # Get current version from axion-release
-            CURRENT_VERSION=$(./gradlew currentVersion -q --console=plain | tail -1)
-            echo "Current version: $CURRENT_VERSION"
+            CURRENT_VERSION_RAW=$(./gradlew currentVersion -q --console=plain | tail -1)
+            echo "Raw version output: $CURRENT_VERSION_RAW"
+
+            # Strip "Project version: " prefix if present
+            CURRENT_VERSION=$(echo "$CURRENT_VERSION_RAW" | sed 's/^Project version: //')
+            echo "Parsed version: $CURRENT_VERSION"
+
+            # Remove -SNAPSHOT suffix if present for version parsing
+            BASE_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-SNAPSHOT$//')
+            echo "Base version: $BASE_VERSION"
 
             # Parse version components
-            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            IFS='.' read -ra VERSION_PARTS <<< "$BASE_VERSION"
             MAJOR=${VERSION_PARTS[0]}
             MINOR=${VERSION_PARTS[1]}
             PATCH=${VERSION_PARTS[2]}
