@@ -94,7 +94,7 @@ class SchemaRetrievalHandlerTest {
         ConfigSchema schema = ConfigSchema.create(serviceName, "1.0.0", jsonSchema);
         schema.createdAt = LocalDateTime.now();
 
-        when(moduleRepository.findSchemaById(anyString()))
+        when(moduleRepository.findLatestSchemaByServiceName(eq(serviceName)))
             .thenReturn(Uni.createFrom().item(schema));
 
         GetModuleSchemaRequest request = GetModuleSchemaRequest.newBuilder()
@@ -109,6 +109,9 @@ class SchemaRetrievalHandlerTest {
         assertNotNull(response);
         assertEquals(serviceName, response.getServiceName());
         assertEquals(jsonSchema, response.getSchemaJson());
+        
+        verify(moduleRepository).findLatestSchemaByServiceName(eq(serviceName));
+        verifyNoInteractions(apicurioClient, grpcClientFactory);
     }
 
     @Test
@@ -161,7 +164,7 @@ class SchemaRetrievalHandlerTest {
             .setDescription("Test Description")
             .build();
 
-        when(moduleRepository.findSchemaById(anyString()))
+        when(moduleRepository.findLatestSchemaByServiceName(eq(serviceName)))
             .thenReturn(Uni.createFrom().nullItem());
 
         when(apicurioClient.getSchema(anyString(), anyString()))
@@ -205,7 +208,7 @@ class SchemaRetrievalHandlerTest {
             .setVersion("1.0.0")
             .build(); // No schema provided
 
-        when(moduleRepository.findSchemaById(anyString()))
+        when(moduleRepository.findLatestSchemaByServiceName(eq(serviceName)))
             .thenReturn(Uni.createFrom().nullItem());
 
         when(apicurioClient.getSchema(anyString(), anyString()))
@@ -237,7 +240,7 @@ class SchemaRetrievalHandlerTest {
         // Arrange
         String serviceName = "non-existent-module";
 
-        when(moduleRepository.findSchemaById(anyString()))
+        when(moduleRepository.findLatestSchemaByServiceName(eq(serviceName)))
             .thenReturn(Uni.createFrom().nullItem());
 
         when(apicurioClient.getSchema(anyString(), anyString()))

@@ -73,9 +73,8 @@ public class SchemaRetrievalHandler {
      */
     private Uni<ConfigSchema> getSchemaFromDatabase(String serviceName, String version) {
         if (version == null) {
-            // Get latest version - query by service name and get most recent
-            return moduleRepository.findSchemaById(serviceName + "-v1")
-                .onItem().ifNull().continueWith(() -> null);
+            // Get latest version by service name
+            return moduleRepository.findLatestSchemaByServiceName(serviceName);
         } else {
             String schemaId = ConfigSchema.generateSchemaId(serviceName, version);
             return moduleRepository.findSchemaById(schemaId);
