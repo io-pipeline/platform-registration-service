@@ -4,6 +4,7 @@ import ai.pipestream.platform.registration.*;
 import ai.pipestream.registration.handlers.ServiceRegistrationHandler;
 import ai.pipestream.registration.handlers.ModuleRegistrationHandler;
 import ai.pipestream.registration.handlers.ServiceDiscoveryHandler;
+import ai.pipestream.registration.handlers.SchemaRetrievalHandler;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
@@ -28,6 +29,9 @@ public class PlatformRegistrationService extends MutinyPlatformRegistrationGrpc.
     
     @Inject
     ServiceDiscoveryHandler discoveryHandler;
+    
+    @Inject
+    SchemaRetrievalHandler schemaRetrievalHandler;
 
     @Override
     public Multi<RegistrationEvent> registerService(ServiceRegistrationRequest request) {
@@ -118,5 +122,13 @@ public class PlatformRegistrationService extends MutinyPlatformRegistrationGrpc.
     public Multi<ModuleListResponse> watchModules(Empty request) {
         LOG.info("Received request to watch modules for real-time updates");
         return discoveryHandler.watchModules();
+    }
+    
+    @Override
+    public Uni<ModuleSchemaResponse> getModuleSchema(GetModuleSchemaRequest request) {
+        LOG.infof("Received request to get schema for module: %s, version: %s",
+                 request.getServiceName(),
+                 request.hasVersion() ? request.getVersion() : "latest");
+        return schemaRetrievalHandler.getModuleSchema(request);
     }
 }

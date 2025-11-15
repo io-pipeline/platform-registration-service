@@ -1,0 +1,264 @@
+package ai.pipestream.registration.handlers;
+
+import ai.pipestream.data.module.RegistrationRequest;
+import ai.pipestream.data.module.ServiceRegistrationMetadata;
+import ai.pipestream.dynamic.grpc.client.DynamicGrpcClientFactory;
+import ai.pipestream.platform.registration.GetModuleSchemaRequest;
+import ai.pipestream.platform.registration.ModuleSchemaResponse;
+import ai.pipestream.registration.entity.ConfigSchema;
+import ai.pipestream.registration.repository.ApicurioRegistryClient;
+import ai.pipestream.registration.repository.ModuleRepository;
+import com.google.protobuf.Timestamp;
+import io.apicurio.registry.rest.client.models.ArtifactMetaData;
+import io.apicurio.registry.rest.client.models.VersionMetaData;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+/**
+ * Handles schema retrieval operations from Apicurio Registry with fallback to module direct calls
+ */
+@ApplicationScoped
+public class SchemaRetrievalHandler {
+    
+    private static final Logger LOG = Logger.getLogger(SchemaRetrievalHandler.class);
+    
+    @Inject
+    ApicurioRegistryClient apicurioClient;
+    
+    @Inject
+    ModuleRepository moduleRepository;
+    
+    @Inject
+    DynamicGrpcClientFactory grpcClientFactory;
+    
+    /**
+     * Get module configuration schema from Apicurio Registry or fallback to module direct call
+     */
+    public Uni<ModuleSchemaResponse> getModuleSchema(GetModuleSchemaRequest request) {
+        String serviceName = request.getServiceName();
+        String version = request.hasVersion() && !request.getVersion().isEmpty() 
+            ? request.getVersion() 
+            : null;
+        
+        LOG.infof("Retrieving schema for module: %s, version: %s", 
+            serviceName, version != null ? version : "latest");
+        
+        // Try to get schema from database first (system of record)
+        return getSchemaFromDatabase(serviceName, version)
+            .onItem().ifNotNull().transformToUni(schema -> 
+                buildResponseFromDatabase(schema)
+            )
+            .onItem().ifNull().switchTo(() -> {
+                LOG.debugf("Schema not found in database for %s:%s, trying Apicurio", 
+                    serviceName, version);
+                return getSchemaFromApicurio(serviceName, version);
+            })
+            .onFailure().recoverWithUni(error -> {
+                LOG.warnf(error, "Failed to get schema from Apicurio for %s:%s, falling back to module", 
+                    serviceName, version);
+                return getSchemaFromModule(serviceName);
+            });
+    }
+    
+    /**
+     * Get schema from database (system of record)
+     */
+    private Uni<ConfigSchema> getSchemaFromDatabase(String serviceName, String version) {
+        if (version == null) {
+            // Get latest version - query by service name and get most recent
+            return moduleRepository.findSchemaById(serviceName + "-v1")
+                .onItem().ifNull().continueWith(() -> null);
+        } else {
+            String schemaId = ConfigSchema.generateSchemaId(serviceName, version);
+            return moduleRepository.findSchemaById(schemaId);
+        }
+    }
+    
+    /**
+     * Build response from database schema
+     */
+    private Uni<ModuleSchemaResponse> buildResponseFromDatabase(ConfigSchema schema) {
+        ModuleSchemaResponse.Builder builder = ModuleSchemaResponse.newBuilder()
+            .setServiceName(schema.serviceName)
+            .setSchemaJson(schema.jsonSchema)
+            .setSchemaVersion(schema.schemaVersion);
+        
+        if (schema.apicurioArtifactId != null) {
+            builder.setArtifactId(schema.apicurioArtifactId);
+        }
+        
+        if (schema.createdBy != null) {
+            builder.putMetadata("created_by", schema.createdBy);
+        }
+        
+        builder.putMetadata("sync_status", schema.syncStatus.name());
+        
+        if (schema.createdAt != null) {
+            Instant instant = schema.createdAt.toInstant(ZoneOffset.UTC);
+            builder.setUpdatedAt(Timestamp.newBuilder()
+                .setSeconds(instant.getEpochSecond())
+                .setNanos(instant.getNano())
+                .build());
+        }
+        
+        return Uni.createFrom().item(builder.build());
+    }
+    
+    /**
+     * Get schema from Apicurio Registry
+     */
+    private Uni<ModuleSchemaResponse> getSchemaFromApicurio(String serviceName, String version) {
+        String versionToFetch = version != null ? version : "latest";
+        
+        return apicurioClient.getSchema(serviceName, versionToFetch)
+            .flatMap(schemaContent -> {
+                // Get artifact metadata for additional information
+                return apicurioClient.getArtifactMetadata(serviceName)
+                    .map(metadata -> buildResponseFromApicurio(
+                        serviceName, 
+                        schemaContent, 
+                        versionToFetch,
+                        metadata
+                    ));
+            });
+    }
+    
+    /**
+     * Build response from Apicurio artifact
+     */
+    private ModuleSchemaResponse buildResponseFromApicurio(
+            String serviceName,
+            String schemaContent, 
+            String version,
+            ArtifactMetaData metadata) {
+        
+        ModuleSchemaResponse.Builder builder = ModuleSchemaResponse.newBuilder()
+            .setServiceName(serviceName)
+            .setSchemaJson(schemaContent)
+            .setSchemaVersion(version);
+        
+        if (metadata != null) {
+            if (metadata.getArtifactId() != null) {
+                builder.setArtifactId(metadata.getArtifactId());
+            }
+            
+            if (metadata.getOwner() != null) {
+                builder.putMetadata("owner", metadata.getOwner());
+            }
+            
+            if (metadata.getName() != null) {
+                builder.putMetadata("name", metadata.getName());
+            }
+            
+            if (metadata.getDescription() != null) {
+                builder.putMetadata("description", metadata.getDescription());
+            }
+            
+            if (metadata.getModifiedOn() != null) {
+                Instant instant = Instant.ofEpochMilli(metadata.getModifiedOn());
+                builder.setUpdatedAt(Timestamp.newBuilder()
+                    .setSeconds(instant.getEpochSecond())
+                    .setNanos(instant.getNano())
+                    .build());
+            }
+        }
+        
+        return builder.build();
+    }
+    
+    /**
+     * Fallback: Get schema by calling module's getServiceRegistration() directly
+     */
+    private Uni<ModuleSchemaResponse> getSchemaFromModule(String serviceName) {
+        LOG.infof("Falling back to direct module call for schema: %s", serviceName);
+        
+        return grpcClientFactory.getMutinyClientForService(serviceName)
+            .flatMap(stub -> 
+                stub.getServiceRegistration(RegistrationRequest.newBuilder().build())
+            )
+            .map(metadata -> buildResponseFromModuleMetadata(serviceName, metadata))
+            .onFailure().transform(error -> {
+                LOG.errorf(error, "Failed to get schema from module %s", serviceName);
+                return new StatusRuntimeException(
+                    Status.NOT_FOUND.withDescription(
+                        "Module schema not found: " + serviceName + 
+                        ". Module may not be running or registered."
+                    )
+                );
+            });
+    }
+    
+    /**
+     * Build response from module's ServiceRegistrationMetadata
+     */
+    private ModuleSchemaResponse buildResponseFromModuleMetadata(
+            String serviceName,
+            ServiceRegistrationMetadata metadata) {
+        
+        ModuleSchemaResponse.Builder builder = ModuleSchemaResponse.newBuilder()
+            .setServiceName(serviceName);
+        
+        if (metadata.hasJsonConfigSchema() && !metadata.getJsonConfigSchema().isBlank()) {
+            builder.setSchemaJson(metadata.getJsonConfigSchema());
+        } else {
+            // Return a minimal schema if none provided
+            builder.setSchemaJson(synthesizeDefaultSchema(serviceName));
+        }
+        
+        if (metadata.hasVersion()) {
+            builder.setSchemaVersion(metadata.getVersion());
+        } else {
+            builder.setSchemaVersion("unknown");
+        }
+        
+        builder.putMetadata("source", "module-direct");
+        
+        if (metadata.hasDisplayName()) {
+            builder.putMetadata("display_name", metadata.getDisplayName());
+        }
+        
+        if (metadata.hasDescription()) {
+            builder.putMetadata("description", metadata.getDescription());
+        }
+        
+        if (metadata.hasOwner()) {
+            builder.putMetadata("owner", metadata.getOwner());
+        }
+        
+        // Set current timestamp as updated_at
+        Instant now = Instant.now();
+        builder.setUpdatedAt(Timestamp.newBuilder()
+            .setSeconds(now.getEpochSecond())
+            .setNanos(now.getNano())
+            .build());
+        
+        return builder.build();
+    }
+    
+    /**
+     * Synthesize a default schema if module doesn't provide one
+     */
+    private String synthesizeDefaultSchema(String moduleName) {
+        return "{\n" +
+            "  \"openapi\": \"3.1.0\",\n" +
+            "  \"info\": { \"title\": \"" + moduleName + " Configuration\", \"version\": \"1.0.0\" },\n" +
+            "  \"components\": {\n" +
+            "    \"schemas\": {\n" +
+            "      \"Config\": {\n" +
+            "        \"type\": \"object\",\n" +
+            "        \"additionalProperties\": { \"type\": \"string\" },\n" +
+            "        \"description\": \"Key-value configuration for " + moduleName + "\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+    }
+}
