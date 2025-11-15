@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     id 'pl.allegro.tech.build.axion-release' version '1.21.0'
     alias(libs.plugins.java)
@@ -88,7 +90,15 @@ compileTestJava {
 // Use @ delimiters to avoid conflicts with ${} runtime property placeholders
 processResources {
     filesMatching('**/*.properties') {
-        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: [
+        filter(ReplaceTokens, tokens: [
+            version: project.version.toString()
+        ])
+    }
+}
+
+processTestResources {
+    filesMatching('**/*.properties') {
+        filter(ReplaceTokens, tokens: [
             version: project.version.toString()
         ])
     }
