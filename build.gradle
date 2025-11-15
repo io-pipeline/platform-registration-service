@@ -158,11 +158,11 @@ publishing {
                     if (dependencyManagementNode.isEmpty()) {
                         depsNode = projectNode.appendNode('dependencyManagement').appendNode('dependencies')
                     } else {
-                        depsNode = dependencyManagementNode[0].get('dependencies')
+                        depsNode = dependencyManagementNode[0 as String].get('dependencies')
                         if (depsNode.isEmpty()) {
-                            depsNode = dependencyManagementNode[0].appendNode('dependencies')
+                            depsNode = dependencyManagementNode[0 as String].appendNode('dependencies')
                         } else {
-                            depsNode = depsNode[0]
+                            depsNode = depsNode[0 as String]
                         }
                     }
                     // Check if pipeline-bom already exists
