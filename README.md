@@ -30,7 +30,9 @@ This service provides real-time service discovery, health monitoring, and config
 - Dual storage: MySQL as primary, Apicurio Registry as secondary
 - OpenAPI/JSON Schema validation and versioning
 - Automatic schema synchronization
-- Schema discovery and retrieval
+- Centralized schema retrieval via `getModuleSchema()` RPC
+- Three-tier retrieval: Database → Apicurio → Module Direct Call
+- Schema discovery and retrieval with version support
 
 **Event Streaming**
 - Publishes registration/unregistration events to Kafka
@@ -340,6 +342,59 @@ pnpm run dev
 - `getModule(ServiceLookupRequest) -> Uni<ModuleDetails>`
 - `resolveService(ServiceResolveRequest) -> Uni<ServiceResolveResponse>`
 - `watchServices(Empty) -> Multi<ServiceListResponse>`
+- `watchModules(Empty) -> Multi<ModuleListResponse>`
+- `getModuleSchema(GetModuleSchemaRequest) -> Uni<ModuleSchemaResponse>` **[NEW]**
+
+#### getModuleSchema - Centralized Schema Retrieval
+
+The `getModuleSchema` RPC method provides centralized access to module configuration schemas with the following features:
+
+**Request Parameters:**
+- `service_name` (required): Name of the module
+- `version` (optional): Specific version to retrieve. If omitted, returns the latest version
+
+**Response Fields:**
+- `service_name`: Name of the module
+- `schema_json`: JSON Schema or OpenAPI schema as string
+- `schema_version`: Version of the schema
+- `artifact_id`: Apicurio Registry artifact ID (if available)
+- `metadata`: Map of additional metadata (owner, description, created_by, etc.)
+- `updated_at`: Timestamp of when the schema was last updated
+
+**Retrieval Strategy (Three-Tier):**
+1. **Database (Primary)**: Checks MySQL database (system of record)
+2. **Apicurio Registry (Secondary)**: Falls back to Apicurio if not in database
+3. **Module Direct Call (Tertiary)**: Calls module's `getServiceRegistration()` if schema not in registry
+4. **Synthesis (Fallback)**: Generates a default OpenAPI 3.1 schema if module provides none
+
+**Example Usage (Frontend):**
+```typescript
+const client = createPlatformRegistrationClient();
+
+// Get latest version
+const response = await client.getModuleSchema({
+  serviceName: 'pdf-extractor'
+});
+
+// Get specific version
+const response = await client.getModuleSchema({
+  serviceName: 'pdf-extractor',
+  version: '2.1.0'
+});
+
+const schema = JSON.parse(response.schemaJson);
+console.log('Schema version:', response.schemaVersion);
+console.log('Artifact ID:', response.artifactId);
+console.log('Metadata:', response.metadata);
+```
+
+**Benefits:**
+- ✅ Schema available even if module is down
+- ✅ Centralized versioning through Apicurio
+- ✅ Single service call (no need for dynamic transports)
+- ✅ Rich metadata support
+- ✅ Full version history
+- ✅ Graceful fallback to module direct call
 
 ### REST Endpoints
 
