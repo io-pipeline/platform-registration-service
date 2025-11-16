@@ -215,8 +215,9 @@ publishing {
 }
 
 signing {
-    def signingKey = System.getenv("GPG_SIGNING_KEY")
-    def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+    // Read org-level GPG secrets directly, so runnable apps don't need extra env mapping
+    def signingKey = System.getenv("GPG_PRIVATE_KEY")
+    def signingPassword = System.getenv("GPG_PASSPHRASE")
 
     if (signingKey && signingPassword) {
         useInMemoryPgpKeys(signingKey, signingPassword)
