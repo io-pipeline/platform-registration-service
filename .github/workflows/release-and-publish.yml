@@ -255,9 +255,10 @@ jobs:
 
       - name: Trigger Docker Hub publish (release)
         if: success()
+        continue-on-error: true  # Don't fail job if dispatch fails
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DISPATCH_TOKEN }}
           repository: ${{ github.repository }}
           event-type: dockerhub-publish
           client-payload: |
