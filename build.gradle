@@ -226,9 +226,11 @@ signing {
 }
 
 // Ensure all signing tasks run before nmcp bundles and publishes artifacts
-tasks.withType(Sign).configureEach { signTask ->
+afterEvaluate {
     tasks.matching { it.name.startsWith("nmcpZipAllPublications") || it.name.startsWith("nmcpPublishAllPublicationsToCentralPortal") }
-        .configureEach { it.dependsOn(signTask) }
+        .configureEach { nmcpTask ->
+            nmcpTask.dependsOn(tasks.withType(Sign))
+        }
 }
 
 nmcp {
