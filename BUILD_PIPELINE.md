@@ -231,6 +231,27 @@ For each new project, update these values:
 **In `dockerhub-publish.yml`:**
 - [ ] Verify Docker Hub repository name matches project
 
+**In `.gitignore`:**
+- [ ] Add `.dev-helpers/` for auto-downloaded helper scripts
+- [ ] Add `.claude` and `CLAUDE.md` for Claude Code artifacts
+- [ ] Ensure no secrets or local config files are tracked
+
+Example `.gitignore` additions:
+```gitignore
+# Claude Code
+.claude
+CLAUDE.md
+
+# Auto-downloaded dev helpers
+.dev-helpers/
+```
+
+**In startup scripts (`scripts/start-*.sh`):**
+- [ ] Update `SERVICE_NAME` for your service
+- [ ] Update `SERVICE_PORT` to match your service port
+- [ ] Update `DESCRIPTION` with service description
+- [ ] Ensure script uses bootstrap pattern (auto-downloads from GitHub)
+
 ### 4. Key Workflow Features
 
 **Improved Version Parsing:**
@@ -382,9 +403,43 @@ your-project/
 │       ├── build-and-publish.yml      # CI on push/PR
 │       ├── release-and-publish.yml    # Release workflow
 │       └── dockerhub-publish.yml      # Docker Hub mirroring
+├── scripts/
+│   └── start-your-service.sh          # Dev startup with bootstrap
 ├── build.gradle                        # Build config with signing/publishing
 ├── settings.gradle                     # Project settings
-└── BUILD_PIPELINE.md                   # This documentation
+├── .gitignore                          # Includes .dev-helpers/, .claude, etc.
+└── BUILD_PIPELINE.md                   # This documentation (optional)
+```
+
+## Startup Script Pattern
+
+Each service includes a self-bootstrapping startup script that:
+
+1. **Auto-downloads helper scripts** from `ai-pipestream/dev-assets` GitHub repo
+2. **Caches helpers** in `.dev-helpers/` (gitignored)
+3. **Creates fallback helpers** if network unavailable
+4. **Works OOTB** after git clone - no manual setup required
+
+Key features:
+- Uses `DEV_ASSETS_LOCATION_OVERRIDE` env var for custom paths
+- Caches downloaded scripts for offline use
+- Provides minimal fallback functions if download fails
+- Pattern similar to Gradle Wrapper for consistency
+
+Example bootstrap pattern (in `scripts/start-*.sh`):
+```bash
+DEV_ASSETS_REPO="https://raw.githubusercontent.com/ai-pipestream/dev-assets/main"
+HELPERS_DIR="$PROJECT_ROOT/.dev-helpers"
+
+bootstrap_helpers() {
+  if [ -f "$HELPERS_DIR/scripts/shared-utils.sh" ]; then
+    DEV_ASSETS_LOCATION="$HELPERS_DIR"
+    return 0
+  fi
+
+  # Download from GitHub
+  curl -fsSL "$DEV_ASSETS_REPO/scripts/shared-utils.sh" -o "$HELPERS_DIR/scripts/shared-utils.sh"
+}
 ```
 
 ## Support

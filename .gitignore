@@ -52,6 +52,10 @@ quarkus.log
 .env
 .env.local
 .env.*.local
+
+# Claude Code
 .claude
-.env
+CLAUDE.md
+
+# Auto-downloaded dev helpers
 .dev-helpers/
