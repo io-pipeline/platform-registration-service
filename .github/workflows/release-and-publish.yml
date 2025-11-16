@@ -178,40 +178,27 @@ jobs:
           cp build/libs/*.jar release-artifacts/
           cp DOCKER_RUN.md release-artifacts/
           cp README.md release-artifacts/
+          cd release-artifacts && zip -r ../platform-registration-service-${{ steps.release.outputs.version }}-artifacts.zip . && cd ..
 
-      - name: Create GitHub release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create GitHub release and upload assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.release.outputs.tag }}
-          release_name: Release ${{ steps.release.outputs.version }}
-          body: |
-            ## Changes in this release
+        run: |
+          gh release create ${{ steps.release.outputs.tag }} \
+            --title "Release ${{ steps.release.outputs.version }}" \
+            --notes "## Changes in this release
 
-            <!-- Add release notes here -->
+          <!-- Add release notes here -->
 
-            ## Docker Images
+          ## Docker Images
 
-            - `ghcr.io/${{ github.repository_owner }}/platform-registration-service:${{ steps.release.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/platform-registration-service:latest`
+          - \`ghcr.io/${{ github.repository_owner }}/platform-registration-service:${{ steps.release.outputs.version }}\`
+          - \`ghcr.io/${{ github.repository_owner }}/platform-registration-service:latest\`
 
-            ## Assets
+          ## Assets
 
-            - JAR files and documentation included in release assets
-          draft: false
-          prerelease: false
-
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release-artifacts/
-          asset_name: platform-registration-service-${{ steps.release.outputs.version }}-artifacts
-          asset_content_type: application/zip
+          - JAR files and documentation included in release assets" \
+            platform-registration-service-${{ steps.release.outputs.version }}-artifacts.zip
 
   docker-production:
     runs-on: ubuntu-latest
