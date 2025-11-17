@@ -1,3 +1,5 @@
+
+
 # Platform Registration Service - Build and Deployment Guide
 
 ## Overview
