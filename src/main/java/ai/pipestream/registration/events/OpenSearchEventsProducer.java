@@ -10,6 +10,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
+import ai.pipestream.grpc.util.KafkaProtobufKeys;
 import com.google.protobuf.Timestamp;
 
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class OpenSearchEventsProducer {
                 .setTimestamp(createTimestamp())
                 .build();
             
-            UUID key = UUID.randomUUID();
+            UUID key = KafkaProtobufKeys.uuid(event);
             OutgoingKafkaRecordMetadata<UUID> metadata = OutgoingKafkaRecordMetadata.<UUID>builder()
                 .withKey(key)
                 .build();
@@ -68,7 +69,7 @@ public class OpenSearchEventsProducer {
                 .setTimestamp(createTimestamp())
                 .build();
             
-            UUID key = UUID.randomUUID();
+            UUID key = KafkaProtobufKeys.uuid(event);
             OutgoingKafkaRecordMetadata<UUID> metadata = OutgoingKafkaRecordMetadata.<UUID>builder()
                 .withKey(key)
                 .build();
@@ -94,7 +95,7 @@ public class OpenSearchEventsProducer {
                 .setTimestamp(createTimestamp())
                 .build();
             
-            UUID key = UUID.randomUUID();
+            UUID key = KafkaProtobufKeys.uuid(event);
             OutgoingKafkaRecordMetadata<UUID> metadata = OutgoingKafkaRecordMetadata.<UUID>builder()
                 .withKey(key)
                 .build();
@@ -114,7 +115,7 @@ public class OpenSearchEventsProducer {
                 .setTimestamp(createTimestamp())
                 .build();
             
-            UUID key = UUID.randomUUID();
+            UUID key = KafkaProtobufKeys.uuid(event);
             OutgoingKafkaRecordMetadata<UUID> metadata = OutgoingKafkaRecordMetadata.<UUID>builder()
                 .withKey(key)
                 .build();
