@@ -4,7 +4,30 @@ The Platform Registration Service is the central nervous system for service disc
 
 ## Overview
 
-This service provides real-time service discovery, health monitoring, and configuration management for the entire pipeline ecosystem. It maintains a live directory of all running services, their locations, capabilities, and health status while managing configuration schemas and publishing events for downstream systems.
+This service provides real-time service discovery, health monitoring, and configuration management for the entire pipeline ecosystem. It maintains a live directory of all running services, their locations, capabilities, and their health status while managing configuration schemas and publishing events for downstream systems.
+
+### Architectural Role and Importance
+
+While this service manages the lifecycle of other platform components, it also plays a vital role in enforcing standards and reducing complexity across the ecosystem. It should be considered the **single source of truth** for service registration and the primary gateway for service interaction.
+
+#### 1. Centralized Governance and Standard Enforcement
+
+By acting as the sole entry point for service registration, this service enforces a unified standard for how new services are introduced to the platform. Instead of services implementing their own Consul registration or Kafka announcement logic, they simply make a gRPC call to this service. The registration service then orchestrates the entire process:
+
+*   Validating the service's metadata and configuration schema.
+*   Registering the service in Consul with the correct health checks.
+*   Broadcasting the `ServiceRegistered` event to the appropriate Kafka topic.
+
+This pattern ensures that all services are registered consistently and correctly, simplifying development and improving platform stability.
+
+#### 2. Sidecar for the Frontend
+
+The `platform-registration-service` acts as a **secure sidecar** for the web frontend. The frontend's Node.js backend (using Connect-ES) communicates with this service's gRPC endpoints instead of directly with Consul. This design was chosen deliberately because the available Node.js Consul clients are not well-maintained.
+
+This creates several advantages:
+*   **Security Boundary:** It avoids exposing the Consul API directly to the frontend's network boundary.
+*   **Abstraction:** The frontend does not need to know about the underlying service discovery mechanism (Consul), which could be swapped in the future without impacting the UI.
+*   **Stability:** It insulates the frontend from potential issues with third-party Node.js libraries for Consul.
 
 ### Core Functions
 
